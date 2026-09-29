@@ -1,0 +1,3177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OS Lab: Game Engine Simulator v5.0</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: #0d1117;
+    color: #c9d1d9;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 15px 20px;
+    background: #161b22;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #30363d;
+  }
+  header h1 { font-size: 20px; color: #58a6ff; }
+  .stats { display: flex; flex-wrap: wrap; gap: 10px; }
+  .stats span {
+    padding: 6px 12px;
+    background: #21262d;
+    border-radius: 4px;
+    font-size: 12px;
+    border: 1px solid #30363d;
+  }
+  .stats b { color: #58a6ff; }
+
+  /* Вкладки */
+  .tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    background: #161b22;
+    padding: 5px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    flex-wrap: wrap;
+  }
+  .tabs button {
+    padding: 10px 18px;
+    background: transparent;
+    color: #8b949e;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .tabs button:hover { background: #21262d; color: #c9d1d9; }
+  .tabs button.active { background: #1f6feb; color: #fff; }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  main {
+    display: grid;
+    grid-template-columns: 280px 1fr 340px;
+    grid-template-rows: auto auto auto;
+    gap: 20px;
+  }
+
+  .controls {
+    grid-row: span 3;
+    background: #161b22;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .controls h2 {
+    font-size: 11px;
+    color: #8b949e;
+    margin: 15px 0 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .controls h2:first-child { margin-top: 0; }
+  .controls button {
+    display: block;
+    width: 100%;
+    margin-bottom: 6px;
+    padding: 8px 12px;
+    background: #21262d;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    text-align: left;
+    transition: all 0.15s;
+  }
+  .controls button:hover:not(:disabled) {
+    background: #30363d;
+    border-color: #58a6ff;
+    transform: translateX(3px);
+  }
+  .controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .controls button[data-scenario] {
+    background: #1f2d3d;
+    border-color: #2d4a6b;
+  }
+  .controls button.primary {
+    background: #1f6feb;
+    border-color: #58a6ff;
+    color: #fff;
+    font-weight: bold;
+  }
+  .controls button.primary:hover:not(:disabled) { background: #388bfd; }
+  .controls button.danger {
+    background: #2d1010;
+    border-color: #5c1d1d;
+    color: #ff7b72;
+  }
+
+  .algo-switch {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  .algo-switch button {
+    flex: 1;
+    margin: 0;
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 11px;
+  }
+  .algo-switch button.active {
+    background: #1f6feb;
+    border-color: #58a6ff;
+    color: #fff;
+    font-weight: bold;
+  }
+
+  /* Слайдеры */
+  .slider-group {
+    margin-bottom: 12px;
+  }
+  .slider-group label {
+    display: block;
+    font-size: 11px;
+    color: #8b949e;
+    margin-bottom: 4px;
+  }
+  .slider-group label b {
+    color: #58a6ff;
+  }
+  .slider-group input[type="range"] {
+    width: 100%;
+    accent-color: #58a6ff;
+  }
+
+  .student-info-panel {
+    background: #21262d;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-size: 11px;
+    border-left: 3px solid #a371f7;
+  }
+  .student-info-panel div { color: #8b949e; margin-bottom: 3px; }
+  .student-info-panel b { color: #c9d1d9; }
+  .student-info-panel button {
+    margin-top: 8px;
+    padding: 5px 10px;
+    font-size: 10px;
+    background: #30363d;
+    border: 1px solid #484f58;
+    color: #c9d1d9;
+    border-radius: 4px;
+    cursor: pointer;
+    width: auto;
+  }
+
+  /* Достижения */
+  .achievements-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+  .achievement {
+    padding: 4px 8px;
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    font-size: 14px;
+    opacity: 0.3;
+    transition: all 0.3s;
+    cursor: help;
+  }
+  .achievement.unlocked {
+    opacity: 1;
+    background: #1f2d3d;
+    border-color: #d29922;
+    box-shadow: 0 0 8px rgba(210,153,34,0.4);
+  }
+
+  /* Уровень */
+  .level-panel {
+    background: linear-gradient(135deg, #1f6feb 0%, #a371f7 100%);
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .level-panel .level-name {
+    font-size: 11px;
+    color: rgba(255,255,255,0.8);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .level-panel .level-title {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    margin: 3px 0;
+  }
+  .level-panel .level-bar {
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .level-panel .level-bar div {
+    height: 100%;
+    background: #fff;
+    transition: width 0.5s;
+  }
+
+  .memory-view {
+    grid-column: 2;
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 15px;
+  }
+  .ram, .swap {
+    background: #161b22;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+  }
+  .ram h3, .swap h3 {
+    font-size: 12px;
+    color: #8b949e;
+    margin-bottom: 10px;
+  }
+  .blocks {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    min-height: 180px;
+  }
+  .block {
+    aspect-ratio: 1;
+    border-radius: 4px;
+    background: #21262d;
+    border: 1px solid #30363d;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: #fff;
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;
+  }
+  .block.used { background: #238636; border-color: #2ea043; }
+  .block.swapped { background: #9e6a03; border-color: #d29922; }
+  .block.free { background: #21262d; cursor: default; }
+  .block.hot { box-shadow: 0 0 10px #f85149; border-color: #f85149; }
+  .block:hover:not(.free) {
+    transform: scale(1.1);
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(88,166,255,0.6);
+  }
+
+  .chart-section {
+    grid-column: 2;
+    background: #161b22;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+  }
+  .chart-section h3 {
+    font-size: 12px;
+    color: #8b949e;
+    margin-bottom: 8px;
+  }
+  #fps-chart { width: 100%; height: 100px; background: #0d1117; border-radius: 4px; }
+
+  /* Диаграмма Ганта */
+  .gantt-section {
+    grid-column: 2;
+    background: #161b22;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+  }
+  .gantt-section h3 {
+    font-size: 12px;
+    color: #8b949e;
+    margin-bottom: 8px;
+  }
+  #gantt-chart { width: 100%; height: 100px; background: #0d1117; border-radius: 4px; }
+
+  .processes {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+    background: #161b22;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+    max-height: 92vh;
+    overflow-y: auto;
+  }
+  .processes h3 {
+    font-size: 12px;
+    color: #8b949e;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .process {
+    background: #21262d;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+    border-radius: 6px;
+    border-left: 4px solid #58a6ff;
+    font-size: 11px;
+    transition: all 0.3s;
+    position: relative;
+  }
+  .process.running { border-left-color: #2ea043; }
+  .process.blocked { border-left-color: #d29922; }
+  .process.dead { border-left-color: #f85149; opacity: 0.4; }
+  .process.critical::after {
+    content: '⚠';
+    position: absolute;
+    top: 4px;
+    right: 6px;
+    color: #d29922;
+    font-size: 10px;
+  }
+  .process .cpu-bar {
+    height: 3px;
+    background: #30363d;
+    border-radius: 2px;
+    margin-top: 5px;
+    overflow: hidden;
+  }
+  .process .cpu-bar div {
+    height: 100%;
+    background: #2ea043;
+    transition: width 0.3s;
+  }
+
+  .log {
+    grid-column: 2;
+    background: #161b22;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #30363d;
+  }
+  .log h3 { font-size: 12px; color: #8b949e; margin-bottom: 8px; }
+  #log {
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 11px;
+    max-height: 130px;
+    overflow-y: auto;
+  }
+  #log div { padding: 2px 0; border-bottom: 1px solid #21262d; }
+  .log-info { color: #58a6ff; }
+  .log-warn { color: #d29922; }
+  .log-error { color: #f85149; }
+  .log-ok { color: #2ea043; }
+  .log-quiz { color: #a371f7; font-weight: bold; }
+  .log-sync { color: #79c0ff; }
+  .log-ipc { color: #d2a8ff; }
+
+  /* Модальные окна */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    padding: 25px;
+    max-width: 620px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  .modal h2 { color: #58a6ff; margin-bottom: 15px; font-size: 20px; }
+  .modal p { margin-bottom: 12px; line-height: 1.6; color: #c9d1d9; }
+  .modal ul { margin: 10px 0 12px 20px; line-height: 1.8; }
+  .modal .question {
+    background: #21262d;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 15px 0;
+    border-left: 4px solid #a371f7;
+  }
+  .modal .question h4 {
+    color: #a371f7;
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+  .modal label {
+    display: block;
+    padding: 10px;
+    margin: 6px 0;
+    background: #21262d;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+  }
+  .modal label:hover { background: #30363d; border-color: #58a6ff; }
+  .modal input[type="radio"] { margin-right: 8px; }
+  .modal input[type="text"], .modal input[type="date"], .modal input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #c9d1d9;
+    font-size: 14px;
+    margin-bottom: 12px;
+    font-family: inherit;
+  }
+  .modal input:focus { outline: none; border-color: #58a6ff; }
+  .modal .field-label {
+    display: block;
+    font-size: 12px;
+    color: #8b949e;
+    margin-bottom: 5px;
+    background: none;
+    padding: 0;
+    border: none;
+    cursor: auto;
+  }
+  .modal .feedback {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 6px;
+    display: none;
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .modal .feedback.correct {
+    background: #0d2a15;
+    border-left: 4px solid #2ea043;
+    color: #7ee787;
+    display: block;
+  }
+  .modal .feedback.wrong {
+    background: #2d1010;
+    border-left: 4px solid #f85149;
+    color: #ff7b72;
+    display: block;
+  }
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .modal-buttons button {
+    padding: 10px 20px;
+    background: #1f6feb;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .modal-buttons button:hover { background: #388bfd; }
+  .modal-buttons button.secondary {
+    background: #21262d;
+    color: #c9d1d9;
+    border: 1px solid #30363d;
+  }
+  .modal-buttons button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .results-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 13px;
+  }
+  .results-table th, .results-table td {
+    padding: 8px 10px;
+    border: 1px solid #30363d;
+    text-align: left;
+  }
+  .results-table th {
+    background: #21262d;
+    color: #58a6ff;
+    font-weight: 600;
+  }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+  }
+  .badge.FIFO { background: #1f6feb; }
+  .badge.LRU { background: #a371f7; }
+  .badge.Clock { background: #2ea043; }
+
+  /* HELP TAB */
+  .help-container { max-width: 1000px; margin: 0 auto; }
+  .help-intro {
+    background: #161b22;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #30363d;
+    margin-bottom: 20px;
+  }
+  .help-intro h2 { color: #58a6ff; font-size: 22px; margin-bottom: 12px; }
+  .help-intro p { line-height: 1.7; color: #c9d1d9; margin-bottom: 10px; }
+  .help-toc { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+  .help-toc a {
+    padding: 6px 12px;
+    background: #21262d;
+    color: #58a6ff;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+  .help-toc a:hover { background: #1f6feb; color: #fff; border-color: #58a6ff; }
+  .help-card {
+    background: #161b22;
+    padding: 25px;
+    border-radius: 12px;
+    border: 1px solid #30363d;
+    margin-bottom: 20px;
+    scroll-margin-top: 20px;
+  }
+  .help-card h3 {
+    color: #58a6ff;
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+  .help-card h4 {
+    color: #a371f7;
+    font-size: 15px;
+    margin: 18px 0 8px;
+  }
+  .help-card p { line-height: 1.7; margin-bottom: 10px; color: #c9d1d9; }
+  .help-card ul, .help-card ol { margin: 10px 0 10px 25px; line-height: 1.8; }
+  .help-card li { margin-bottom: 6px; }
+  .help-card code {
+    font-family: 'Consolas', 'Courier New', monospace;
+    background: #21262d;
+    color: #79c0ff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+  }
+  .help-callout {
+    background: #1f2d3d;
+    border-left: 4px solid #58a6ff;
+    padding: 12px 16px;
+    border-radius: 6px;
+    margin: 15px 0;
+    font-size: 14px;
+  }
+  .help-callout.game { background: #2d1f3d; border-left-color: #a371f7; }
+  .help-callout.warn { background: #2d2010; border-left-color: #d29922; }
+  .help-callout b { color: #58a6ff; }
+  .help-callout.game b { color: #a371f7; }
+  .help-callout.warn b { color: #d29922; }
+  .help-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 14px;
+  }
+  .help-table th, .help-table td {
+    padding: 10px 12px;
+    border: 1px solid #30363d;
+    text-align: left;
+  }
+  .help-table th { background: #21262d; color: #58a6ff; font-weight: 600; }
+  .help-table tr:nth-child(even) { background: #1a1f26; }
+  .help-diagram {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px 0;
+    font-family: 'Consolas', monospace;
+    font-size: 13px;
+    color: #7ee787;
+    white-space: pre;
+    overflow-x: auto;
+    line-height: 1.5;
+  }
+
+  /* Мини-игра */
+  .mini-game-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.9);
+    display: none;
+    z-index: 2000;
+    padding: 20px;
+  }
+  .mini-game-overlay.active { display: block; }
+  .mini-game {
+    max-width: 900px;
+    margin: 40px auto;
+    background: #161b22;
+    border: 2px solid #1f6feb;
+    border-radius: 12px;
+    padding: 30px;
+  }
+  .mini-game h2 {
+    color: #58a6ff;
+    margin-bottom: 20px;
+    font-size: 24px;
+    text-align: center;
+  }
+  .mini-game .score-display {
+    text-align: center;
+    font-size: 32px;
+    font-weight: bold;
+    color: #2ea043;
+    margin: 20px 0;
+  }
+  .mini-game .event-box {
+    background: #21262d;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+    border-left: 4px solid #d29922;
+    min-height: 80px;
+    font-size: 16px;
+  }
+  .mini-game .event-title {
+    color: #d29922;
+    font-weight: bold;
+    margin-bottom: 8px;
+  }
+  .mini-game .game-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .mini-game .game-controls button {
+    padding: 15px;
+    background: #1f6feb;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.15s;
+  }
+  .mini-game .game-controls button:hover { background: #388bfd; transform: translateY(-2px); }
+  .mini-game .game-controls button.danger { background: #d1242f; }
+  .mini-game .game-controls button.danger:hover { background: #f85149; }
+  .mini-game .game-controls button.success { background: #238636; }
+  .mini-game .game-controls button.success:hover { background: #2ea043; }
+
+  /* Уведомления */
+  .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #161b22;
+    border: 2px solid #d29922;
+    border-radius: 8px;
+    padding: 15px 20px;
+    max-width: 350px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    z-index: 3000;
+    transform: translateX(400px);
+    transition: transform 0.4s ease;
+  }
+  .notification.show { transform: translateX(0); }
+  .notification .ach-icon { font-size: 28px; margin-bottom: 5px; }
+  .notification .ach-title {
+    color: #d29922;
+    font-weight: bold;
+    margin-bottom: 5px;
+    font-size: 14px;
+  }
+  .notification .ach-desc { color: #c9d1d9; font-size: 13px; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #0d1117; }
+  ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+  @media (max-width: 1300px) {
+    main { grid-template-columns: 1fr; }
+    .controls, .memory-view, .processes, .log, .chart-section, .gantt-section { 
+      grid-column: 1; grid-row: auto; max-height: none;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🎮 Game Engine OS Simulator v5.0</h1>
+  <div class="stats">
+    <span>RAM: <b id="ram-usage">0/512 MB</b></span>
+    <span>Swap: <b id="swap-usage">0/1024 MB</b></span>
+    <span>Page Faults: <b id="page-faults">0</b></span>
+    <span>FPS: <b id="fps">60</b></span>
+    <span>Алгоритм: <b id="algo-display">FIFO</b></span>
+    <span>Фризы: <b id="freeze-time">0.0 с</b></span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button data-tab="sim" class="active">🎮 Симулятор</button>
+  <button data-tab="help">📚 Справка</button>
+  <button data-tab="achievements">🏆 Достижения</button>
+</div>
+
+<!-- Вкладка: симулятор -->
+<div class="tab-content active" id="tab-sim">
+<main>
+  <section class="controls">
+    <div class="level-panel">
+      <div class="level-name">Уровень</div>
+      <div class="level-title" id="level-title">Junior Developer</div>
+      <div class="level-bar"><div id="level-bar-fill" style="width: 0%"></div></div>
+    </div>
+
+    <div class="achievements-panel" id="achievements-panel"></div>
+
+    <div class="student-info-panel">
+      <div>Студент: <b id="si-name">не указан</b></div>
+      <div>Группа: <b id="si-group">не указана</b></div>
+      <div>Преподаватель: <b id="si-teacher">не указан</b></div>
+      <div>Дата: <b id="si-date">сегодня</b></div>
+      <button data-action="edit-student">✏️ Изменить</button>
+    </div>
+
+    <h2>Алгоритм</h2>
+    <div class="algo-switch">
+      <button data-algo="FIFO" class="active">FIFO</button>
+      <button data-algo="LRU">LRU</button>
+      <button data-algo="Clock">Clock</button>
+    </div>
+
+    <h2>Настройки системы</h2>
+    <div class="slider-group">
+      <label>Размер RAM: <b id="ram-slider-val">512</b> MB</label>
+      <input type="range" id="ram-slider" min="128" max="1024" step="128" value="512">
+    </div>
+    <div class="slider-group">
+      <label>Размер страницы: <b id="page-slider-val">16</b> MB</label>
+      <input type="range" id="page-slider" min="4" max="64" step="4" value="16">
+    </div>
+    <div class="slider-group">
+      <label>Скорость диска: <b id="disk-slider-val">1.0</b>×</label>
+      <input type="range" id="disk-slider" min="1" max="10" step="1" value="1">
+    </div>
+
+    <h2>Действия</h2>
+    <button data-action="load-texture">📷 Текстура (64 MB)</button>
+    <button data-action="load-model">🧊 Модель (128 MB)</button>
+    <button data-action="load-audio">🔊 Звук (32 MB)</button>
+    <button data-action="spawn-process">⚙️ Запустить процесс</button>
+    <button data-action="kill-process">❌ Убить процесс</button>
+    <button data-action="gc">🧹 Garbage Collector</button>
+    <button data-action="interrupt">⚡ Прерывание (Interrupt)</button>
+    <button data-action="sync-frame">🎬 Синхронизировать кадр</button>
+    <button data-action="stress-io">🌊 Нагрузка на I/O</button>
+    <button data-action="reset">🔄 Сброс симуляции</button>
+
+    <h2>Опыты (13 шт.)</h2>
+    <button data-scenario="1">📘 1. Переполнение RAM</button>
+    <button data-scenario="2">📗 2. Page Thrashing</button>
+    <button data-scenario="3">📙 3. Смерть рендера</button>
+    <button data-scenario="4">📕 4. Утечка памяти</button>
+    <button data-scenario="5">📘 5. Фрагментация</button>
+    <button data-scenario="6">📗 6. A/B алгоритмы</button>
+    <button data-scenario="7">📙 7. Размер страницы</button>
+    <button data-scenario="8">📕 8. Стриминг локации</button>
+    <button data-scenario="9">📘 9. Race Condition</button>
+    <button data-scenario="10">📗 10. Deadlock</button>
+    <button data-scenario="11">📙 11. Producer-Consumer</button>
+    <button data-scenario="12">📕 12. Object Pool</button>
+    <button data-scenario="13">📘 13. OOM-killer</button>
+
+    <h2>Отчётность</h2>
+    <button data-action="show-results">📊 Результаты</button>
+    <button data-action="export-pdf" class="primary">📕 Сохранить PDF</button>
+    <button data-action="export-log">📄 Экспорт журнала</button>
+    <button data-action="clear-results" class="danger">🗑️ Очистить</button>
+
+    <h2>Мини-игра</h2>
+    <button data-action="mini-game" class="primary">🎮 Запустить игру!</button>
+  </section>
+
+  <section class="memory-view">
+    <div class="ram">
+      <h3>RAM (<span id="ram-size-label">512</span> MB, страница = <span id="page-size-label">16</span> MB)</h3>
+      <div id="ram-blocks" class="blocks"></div>
+    </div>
+    <div class="swap">
+      <h3>Swap (1024 MB)</h3>
+      <div id="swap-blocks" class="blocks"></div>
+    </div>
+  </section>
+
+  <section class="chart-section">
+    <h3>📈 FPS во времени</h3>
+    <canvas id="fps-chart"></canvas>
+  </section>
+
+  <section class="gantt-section">
+    <h3>📊 Диаграмма Ганта процессов</h3>
+    <canvas id="gantt-chart"></canvas>
+  </section>
+
+  <section class="processes">
+    <h3>Процессы</h3>
+    <div id="process-list"></div>
+  </section>
+
+  <section class="log">
+    <h3>Журнал ОС</h3>
+    <div id="log"></div>
+  </section>
+</main>
+</div>
+
+<!-- Вкладка: справка -->
+<div class="tab-content" id="tab-help">
+<div class="help-container">
+  <div class="help-intro">
+    <h2>📚 Справка по операционным системам для геймдева</h2>
+    <p>Все концепции, встречающиеся в симуляторе, объяснены простым языком 
+    с привязкой к разработке игр.</p>
+    <div class="help-toc">
+      <a href="#help-virtual-memory">🧠 Виртуальная память</a>
+      <a href="#help-swap">💾 Swap и подкачка</a>
+      <a href="#help-pagefault">⚡ Page fault</a>
+      <a href="#help-algorithms">🔀 Алгоритмы вытеснения</a>
+      <a href="#help-thrashing">🌪️ Thrashing</a>
+      <a href="#help-fragmentation">🧩 Фрагментация</a>
+      <a href="#help-processes">⚙️ Процессы</a>
+      <a href="#help-scheduler">📅 Планировщик</a>
+      <a href="#help-ipc">💬 IPC</a>
+      <a href="#help-races">🏁 Race Condition</a>
+      <a href="#help-deadlock">🔒 Deadlock</a>
+      <a href="#help-gc">🧹 Утечки и GC</a>
+      <a href="#help-pooling">♻️ Object Pool</a>
+      <a href="#help-streaming">🎮 Стриминг в играх</a>
+      <a href="#help-faq">❓ FAQ</a>
+    </div>
+  </div>
+
+  <div class="help-card" id="help-virtual-memory">
+    <h3>🧠 Виртуальная память</h3>
+    <p><b>Что это.</b> Абстракция, при которой программа думает, что у неё есть 
+    непрерывный объём памяти, но ОС распределяет его по физическим страницам.</p>
+    <h4>Как это работает</h4>
+    <p>Процесс оперирует виртуальными адресами. Процессор через MMU 
+    переводит их в физические адреса в RAM.</p>
+    <div class="help-diagram">Процесс → виртуальный адрес 0x0040A000
+              │
+              ▼
+         [ MMU + таблица страниц ]
+              │
+              ▼
+      Физическая страница в RAM (или swap)</div>
+    <div class="help-callout game">
+      <b>В геймдеве:</b> на консолях виртуальное адресное пространство больше 
+      физической RAM. Движки резервируют большие виртуальные регионы под 
+      пулы ресурсов через <code>VirtualAlloc</code>.
+    </div>
+  </div>
+
+  <div class="help-card" id="help-swap">
+    <h3>💾 Swap и подкачка</h3>
+    <p><b>Swap</b> — область на диске, куда ОС выгружает редко используемые страницы.</p>
+    <table class="help-table">
+      <tr><th>Уровень</th><th>Время доступа</th><th>Относительно RAM</th></tr>
+      <tr><td>CPU L1</td><td>~1 нс</td><td>×100 быстрее</td></tr>
+      <tr><td>RAM</td><td>~100 нс</td><td>1×</td></tr>
+      <tr><td>SSD</td><td>~100 мкс</td><td>×1000 медленнее</td></tr>
+      <tr><td>HDD</td><td>~10 мс</td><td>×100000 медленнее</td></tr>
+    </table>
+    <div class="help-callout warn">
+      <b>Важно:</b> на HDD обращение к swap в 100 000 раз медленнее RAM. 
+      Активное использование swap = гарантированные фризы.
+    </div>
+  </div>
+
+  <div class="help-card" id="help-pagefault">
+    <h3>⚡ Page fault</h3>
+    <p>Ситуация, когда процесс обращается к странице, которой нет в RAM. ОС 
+    загружает её с диска — это занимает время.</p>
+    <div class="help-diagram">Процесс обращается к адресу → нет в RAM → PAGE FAULT
+    → ОС читает с диска → страница в RAM → процесс продолжает</div>
+    <div class="help-callout">
+      <b>Правило:</b> чем меньше page faults — тем лучше. В идеале — близко к нулю.
+    </div>
+  </div>
+
+  <div class="help-card" id="help-algorithms">
+    <h3>🔀 Алгоритмы вытеснения</h3>
+    <p>Когда RAM заполнена, ОС решает, какую страницу вытеснить.</p>
+    <table class="help-table">
+      <tr><th>Алгоритм</th><th>Правило</th><th>Page faults</th></tr>
+      <tr><td>FIFO</td><td>Первая вошедшая — первая выходит</td><td>Высокое</td></tr>
+      <tr><td>LRU</td><td>Дольше не использовалась</td><td>Низкое</td></tr>
+      <tr><td>Clock</td><td>Второй шанс: сбрасываем флаг, идём дальше</td><td>Низкое</td></tr>
+    </table>
+    <div class="help-callout game">
+      <b>В геймдеве:</b> правильный алгоритм снижает page faults на 20–40%.
+    </div>
+  </div>
+
+  <div class="help-card" id="help-thrashing">
+    <h3>🌪️ Thrashing</h3>
+    <p>Ситуация, когда ОС тратит больше времени на подкачку, чем на полезную работу.</p>
+    <ul>
+      <li>Page faults растут лавинообразно</li>
+      <li>FPS падает до 5–10</li>
+      <li>Диск постоянно работает</li>
+    </ul>
+    <div class="help-callout game">
+      <b>В геймдеве:</b> игрок бегает по открытому миру, RAM забита, ресурсы 
+      постоянно вытесняются. Решение — система стриминга с LOD и приоритетами.
+    </div>
+  </div>
+
+  <div class="help-card" id="help-fragmentation">
+    <h3>🧩 Фрагментация памяти</h3>
+    <p>Ситуация, когда свободной памяти достаточно, но она раздроблена на куски, 
+    и новый объект не влезает.</p>
+    <h4>Внешняя и внутренняя</h4>
+    <ul>
+      <li><b>Внешняя:</b> между занятыми блоками есть «дырки», но ни одна не подходит по размеру.</li>
+      <li><b>Внутренняя:</b> объект занимает меньше, чем выделенная страница (потери).</li>
+    </ul>
+    <div class="help-callout game">
+      <b>В геймдеве:</b> почему после 2 часов игры «память кончается», хотя 
+      реально занято меньше половины — память раздроблена.
+    </div>
+  </div>
+
+  <div class="help-card" id="help-processes">
+    <h3>⚙️ Процессы</h3>
+    <p>Запущенная программа со своим адресным пространством и состоянием.</p>
+    <table class="help-table">
+      <tr><th>Состояние</th><th>Что значит</th></tr>
+      <tr><td>running</td><td>Выполняется на CPU</td></tr>
+      <tr><td>blocked</td><td>Ждёт I/O</td></tr>
+      <tr><td>dead</td><td>Завершён</td></tr>
+    </table>
+    <div class="help-diagram">        ┌─────────┐
+   ┌───►│  ready  │────┐
+   │    └─────────┘    │
+   │                   ▼
+┌──┴───┐  I/O    ┌──────────┐
+│running│───────►│ blocked  │
+└──┬───┘         └────┬─────┘
+   ▼                  ▼
+┌──────┐
+│ dead │
+└──────┘</div>
+  </div>
+
+  <div class="help-card" id="help-scheduler">
+    <h3>📅 Планировщик процессов</h3>
+    <p>Решает, какой процесс будет выполняться на CPU.</p>
+    <ul>
+      <li><b>Round Robin:</b> по очереди с квантом времени</li>
+      <li><b>Приоритетное:</b> высокий приоритет — первым</li>
+      <li><b>Вытесняющее:</b> ОС прерывает процесс</li>
+    </ul>
+    <div class="help-callout game">
+      <b>В геймдеве:</b> рендер должен иметь высокий приоритет, фоновые 
+      задачи — низкий. <code>SetThreadPriority</code> в Windows.
+    </div>
+  </div>
+
+  <div class="help-card" id="help-ipc">
+    <h3>💬 Межпроцессное взаимодействие (IPC)</h3>
+    <table class="help-table">
+      <tr><th>Механизм</th><th>Что это</th><th>Где</th></tr>
+      <tr><td>Pipe</td><td>Однонаправленный поток</td><td>Unix</td></tr>
+      <tr><td>Shared memory</td><td>Общая область</td><td>Игровые движки</td></tr>
+      <tr><td>Message queue</td><td>Очередь сообщений</td><td>Сетевые игры</td></tr>
+      <tr><td>Socket</td><td>Сетевой обмен</td><td>Multiplayer</td></tr>
+    </table>
+  </div>
+
+  <div class="help-card" id="help-races">
+    <h3>🏁 Race Condition (гонка данных)</h3>
+    <p>Ситуация, когда два процесса одновременно меняют одни данные — результат 
+    непредсказуем.</p>
+    <div class="help-diagram">Ожидаем:       counter = 200
+Реально:       counter = 156 (потеряно 44 операции!)</div>
+    <h4>Решение — мьютекс</h4>
+    <p><b>Мьютекс (mutex)</b> — «замок», который пропускает только один процесс 
+    к данным. Остальные ждут.</p>
+    <div class="help-callout game">
+      <b>В геймдеве:</b> в многопоточных движках все общие данные защищают 
+      мьютексами. Классика — <code>std::mutex</code> в C++.
+    </div>
+  </div>
+
+  <div class="help-card" id="help-deadlock">
+    <h3>🔒 Deadlock (взаимоблокировка)</h3>
+    <p>Два процесса держат ресурсы друг друга и ждут — оба навсегда зависли.</p>
+    <div class="help-diagram">renderer: держит [RAM-A]      ждёт [GPU-queue]
+audio:    держит [GPU-queue]  ждёт [RAM-A]
+
+🔒 DEADLOCK! Оба процесса заблокированы.</div>
+    <h4>Условия возникновения</h4>
+    <ol>
+      <li>Взаимное исключение (ресурс держит один процесс)</li>
+      <li>Ожидание с удержанием (держу A, жду B)</li>
+      <li>Циклическое ожидание (A→B→A)</li>
+      <li>Отсутствие принудительного освобождения</li>
+    </ol>
+  </div>
+
+  <div class="help-card" id="help-gc">
+    <h3>🧹 Утечки памяти и Garbage Collector</h3>
+    <p>Утечка — программа выделяет память и не освобождает.</p>
+    <table class="help-table">
+      <tr><th>Язык</th><th>Управление</th><th>Особенность</th></tr>
+      <tr><td>C/C++</td><td>Ручное</td><td>Полный контроль</td></tr>
+      <tr><td>C#</td><td>GC</td><td>Паузы GC = фризы</td></tr>
+      <tr><td>Rust</td><td>Ownership</td><td>Без GC, строгий компилятор</td></tr>
+    </table>
+    <div class="help-callout warn">
+      <b>Проблема GC:</b> остановка приложения на 10–100 мс. В шутере это фриз.
+    </div>
+  </div>
+
+  <div class="help-card" id="help-pooling">
+    <h3>♻️ Object Pool (пул объектов)</h3>
+    <p>Паттерн, при котором объекты создаются один раз и переиспользуются.</p>
+    <div class="help-diagram">Без пула:
+  new Bullet() → new Bullet() → new Bullet() (постоянные аллокации)
+  → фрагментация, page faults, фризы
+
+С пулом:
+  Bullet[] pool = new Bullet[1000] (один раз при старте)
+  выстрел → берём из пула
+  попадание → возвращаем в пул
+  → никаких аллокаций в рантайме</div>
+    <div class="help-callout game">
+      <b>В геймдеве:</b> пули, частицы, враги, звуки — всегда через пул.
+    </div>
+  </div>
+
+  <div class="help-card" id="help-streaming">
+    <h3>🎮 Стриминг ресурсов</h3>
+    <p>Подгрузка ресурсов «на лету» вместо загрузки всего сразу.</p>
+    <h4>LOD (Level of Detail)</h4>
+    <table class="help-table">
+      <tr><th>Расстояние</th><th>Что загружено</th><th>Размер</th></tr>
+      <tr><td>0–10 м</td><td>Полная модель 4K</td><td>100 MB</td></tr>
+      <tr><td>10–50 м</td><td>Средняя 2K</td><td>30 MB</td></tr>
+      <tr><td>50–200 м</td><td>Упрощённая 512px</td><td>5 MB</td></tr>
+      <tr><td>&gt; 200 м</td><td>Billboard</td><td>0.5 MB</td></tr>
+    </table>
+    <div class="help-callout game">
+      <b>Примеры:</b> The Witcher 3, GTA V, Uncharted 4, Star Citizen.
+    </div>
+  </div>
+
+  <div class="help-card" id="help-faq">
+    <h3>❓ FAQ</h3>
+    <h4>Почему FPS падает при свободной RAM?</h4>
+    <p>Есть накладные расходы: page faults, переключения процессов, работа планировщика.</p>
+    <h4>Может ли swap заменить RAM?</h4>
+    <p>Нет. Swap — аварийный резерв. Работа только через swap в 100–1000 раз медленнее.</p>
+    <h4>Зачем в консолях нет swap?</h4>
+    <p>Фиксированная RAM для предсказуемости. Разработчики точно знают бюджет.</p>
+    <h4>Что такое memory-mapped file?</h4>
+    <p>Файл, видимый программе как область памяти. В играх так грузят большие ассеты.</p>
+    <h4>Влияет ли размер страницы на производительность?</h4>
+    <p>Да. Большие страницы уменьшают page faults, но увеличивают фрагментацию.</p>
+  </div>
+</div>
+</div>
+
+<!-- Вкладка: достижения -->
+<div class="tab-content" id="tab-achievements">
+<div class="help-container">
+  <div class="help-intro">
+    <h2>🏆 Достижения и уровни</h2>
+    <p>Проходите опыты, экспериментируйте с параметрами — открывайте достижения 
+    и повышайте свой уровень от Junior до OS Architect.</p>
+  </div>
+  <div id="achievements-full" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;"></div>
+</div>
+</div>
+
+<!-- Модальные окна -->
+<div class="modal-overlay" id="student-modal">
+  <div class="modal">
+    <h2>👤 Данные студента</h2>
+    <label class="field-label">ФИО</label>
+    <input type="text" id="input-name" placeholder="Иванов Иван Иванович">
+    <label class="field-label">Группа</label>
+    <input type="text" id="input-group" placeholder="ИС-21">
+    <label class="field-label">Преподаватель</label>
+    <input type="text" id="input-teacher" placeholder="Петров Пётр Петрович">
+    <label class="field-label">Дата отчёта</label>
+    <input type="date" id="input-date">
+    <div class="modal-buttons">
+      <button id="student-save">Сохранить</button>
+      <button class="secondary" id="student-cancel">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="task-modal">
+  <div class="modal">
+    <h2 id="task-title">Задание</h2>
+    <div id="task-body"></div>
+    <div class="modal-buttons">
+      <button id="task-start">▶️ Начать опыт</button>
+      <button class="secondary" id="task-cancel">Отмена</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="quiz-modal">
+  <div class="modal">
+    <h2>📝 Проверочный вопрос</h2>
+    <div id="quiz-body"></div>
+    <div class="modal-buttons">
+      <button id="quiz-submit">Ответить</button>
+      <button class="secondary" id="quiz-skip">Пропустить</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="results-modal">
+  <div class="modal">
+    <h2>📊 Результаты опытов</h2>
+    <div id="results-body"></div>
+    <div class="modal-buttons">
+      <button id="results-close">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="page-info-modal">
+  <div class="modal">
+    <h2>🔍 Информация о странице</h2>
+    <div id="page-info-body"></div>
+    <div class="modal-buttons">
+      <button id="page-info-close">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- Мини-игра -->
+<div class="mini-game-overlay" id="mini-game-overlay">
+  <div class="mini-game">
+    <h2>🎮 Запусти игру!</h2>
+    <p style="text-align:center;color:#8b949e">Удерживай FPS > 50 как можно дольше. 
+    Реагируй на события правильно!</p>
+    <div class="score-display" id="mg-score">0 с</div>
+    <div class="event-box" id="mg-event">
+      <div class="event-title">Приготовься...</div>
+      <div>Игра начнётся через 3 секунды</div>
+    </div>
+    <div class="game-controls" id="mg-controls" style="display:none">
+      <button class="success" data-mg="gc">🧹 Garbage Collector</button>
+      <button class="success" data-mg="unload">📤 Выгрузить ресурсы</button>
+      <button class="success" data-mg="priority">⬆️ Поднять приоритет</button>
+      <button class="success" data-mg="lru">🔀 Переключить на LRU</button>
+    </div>
+    <div class="modal-buttons" style="justify-content:center">
+      <button class="secondary" id="mg-close">Выйти</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// Game Engine OS Simulator v5.0
+// ============================================================
+
+// ---------- MemoryManager ----------
+class MemoryManager {
+  constructor(ramSize, swapSize, pageSize) {
+    this.ramSize = ramSize;
+    this.swapSize = swapSize;
+    this.pageSize = pageSize;
+    this.ramPages = new Array(Math.floor(ramSize / pageSize)).fill(null);
+    this.swapPages = new Array(Math.floor(swapSize / pageSize)).fill(null);
+    this.pageFaults = 0;
+    this.algorithm = 'FIFO';
+    this.accessCounter = 0;
+    this.clockHand = 0;
+    this.insertOrder = 0;
+  }
+  setAlgorithm(algo) { this.algorithm = algo; this.clockHand = 0; }
+  setPageSize(newSize) {
+    // Упрощение: пересоздаём с сохранением занятости
+    const usedRAM = this.ramPages.filter(p => p !== null).length * this.pageSize;
+    const usedSwap = this.swapPages.filter(p => p !== null).length * this.pageSize;
+    this.pageSize = newSize;
+    this.ramPages = new Array(Math.floor(this.ramSize / newSize)).fill(null);
+    this.swapPages = new Array(Math.floor(this.swapSize / newSize)).fill(null);
+    // Восстанавливаем часть занятости
+    let toRestoreRAM = Math.floor(usedRAM / newSize);
+    for (let i = 0; i < toRestoreRAM && i < this.ramPages.length; i++) {
+      this.ramPages[i] = { id: 'restored', type: 'data', state: 'active',
+        lastAccess: this.accessCounter++, insertOrder: this.insertOrder++, refBit: 1 };
+    }
+    let toRestoreSwap = Math.floor(usedSwap / newSize);
+    for (let i = 0; i < toRestoreSwap && i < this.swapPages.length; i++) {
+      this.swapPages[i] = { id: 'restored', type: 'data', state: 'swapped' };
+    }
+  }
+
+  allocate(id, size, type) {
+    const pagesNeeded = Math.ceil(size / this.pageSize);
+    const freeRam = this.ramPages.filter(p => p === null).length;
+    if (freeRam >= pagesNeeded) {
+      this._writeToRam(id, pagesNeeded, type);
+      return { ok: true, swapped: false };
+    }
+    const freeSwap = this.swapPages.filter(p => p === null).length;
+    if (freeSwap < pagesNeeded) return { ok: false, error: 'OUT_OF_MEMORY' };
+    this._evictToSwap(pagesNeeded - freeRam);
+    const freeRamAfter = this.ramPages.filter(p => p === null).length;
+    if (freeRamAfter >= pagesNeeded) {
+      this._writeToRam(id, pagesNeeded, type);
+      this.pageFaults++;
+      return { ok: true, swapped: false };
+    } else {
+      this._writeToRam(id, freeRamAfter, type);
+      this._writeToSwap(id, pagesNeeded - freeRamAfter, type);
+      this.pageFaults++;
+      return { ok: true, swapped: true };
+    }
+  }
+
+  _writeToRam(id, count, type) {
+    let written = 0;
+    for (let i = 0; i < this.ramPages.length && written < count; i++) {
+      if (this.ramPages[i] === null) {
+        this.ramPages[i] = {
+          id, type, state: 'active',
+          lastAccess: this.accessCounter++,
+          insertOrder: this.insertOrder++,
+          refBit: 1
+        };
+        written++;
+      }
+    }
+  }
+
+  _writeToSwap(id, count, type) {
+    let written = 0;
+    for (let i = 0; i < this.swapPages.length && written < count; i++) {
+      if (this.swapPages[i] === null) {
+        this.swapPages[i] = { id, type, state: 'swapped' };
+        written++;
+      }
+    }
+  }
+
+  _evictToSwap(count) {
+    let evicted = 0;
+    while (evicted < count) {
+      const idx = this._selectVictim();
+      if (idx === -1) break;
+      const page = this.ramPages[idx];
+      const swapIdx = this.swapPages.findIndex(p => p === null);
+      if (swapIdx === -1) break;
+      this.swapPages[swapIdx] = { id: page.id, type: page.type, state: 'swapped' };
+      this.ramPages[idx] = null;
+      evicted++;
+    }
+    return evicted;
+  }
+
+  _selectVictim() {
+    const candidates = this.ramPages
+      .map((p, i) => ({ page: p, idx: i }))
+      .filter(c => c.page && c.page.type !== 'kernel' && c.page.state === 'active');
+    if (candidates.length === 0) return -1;
+    switch (this.algorithm) {
+      case 'FIFO':
+        return candidates.reduce((min, c) =>
+          c.page.insertOrder < min.page.insertOrder ? c : min).idx;
+      case 'LRU':
+        return candidates.reduce((min, c) =>
+          c.page.lastAccess < min.page.lastAccess ? c : min).idx;
+      case 'Clock':
+        for (let step = 0; step < this.ramPages.length * 2; step++) {
+          const i = this.clockHand % this.ramPages.length;
+          this.clockHand = (this.clockHand + 1) % this.ramPages.length;
+          const p = this.ramPages[i];
+          if (p && p.state === 'active' && p.type !== 'kernel') {
+            if (p.refBit === 1) p.refBit = 0;
+            else return i;
+          }
+        }
+        return -1;
+      default: return candidates[0].idx;
+    }
+  }
+
+  simulateAccess() {
+    const activeIdxs = this.ramPages.map((p, i) => p ? i : -1).filter(i => i !== -1);
+    if (activeIdxs.length > 0) {
+      const i = activeIdxs[Math.floor(Math.random() * activeIdxs.length)];
+      if (this.ramPages[i]) {
+        this.ramPages[i].lastAccess = this.accessCounter++;
+        this.ramPages[i].refBit = 1;
+      }
+    }
+    if (Math.random() < 0.4) {
+      const swapIdx = this.swapPages.findIndex(p => p !== null);
+      if (swapIdx !== -1) {
+        const freeRamIdx = this.ramPages.findIndex(p => p === null);
+        if (freeRamIdx !== -1) {
+          const page = this.swapPages[swapIdx];
+          this.ramPages[freeRamIdx] = {
+            ...page, state: 'active',
+            lastAccess: this.accessCounter++,
+            insertOrder: this.insertOrder++,
+            refBit: 1
+          };
+          this.swapPages[swapIdx] = null;
+          this.pageFaults++;
+        }
+      }
+    }
+  }
+
+  garbageCollect() {
+    let freed = 0;
+    for (let i = 0; i < this.ramPages.length; i++) {
+      if (this.ramPages[i] && this.ramPages[i].type !== 'kernel' && Math.random() < 0.4) {
+        this.ramPages[i] = null;
+        freed++;
+      }
+    }
+    for (let i = 0; i < this.swapPages.length; i++) {
+      if (this.swapPages[i] && Math.random() < 0.3) {
+        this.swapPages[i] = null;
+        freed++;
+      }
+    }
+    return freed;
+  }
+
+  // Фрагментация: процент "дырок" в RAM
+  getFragmentation() {
+    const used = this.ramPages.map((p, i) => p ? i : -1).filter(i => i !== -1);
+    if (used.length < 2) return 0;
+    let gaps = 0;
+    for (let i = used[0]; i <= used[used.length - 1]; i++) {
+      if (this.ramPages[i] === null) gaps++;
+    }
+    const span = used[used.length - 1] - used[0] + 1;
+    return Math.round((gaps / span) * 100);
+  }
+
+  getUsage() {
+    return {
+      ram: {
+        used: this.ramPages.filter(p => p !== null).length * this.pageSize,
+        total: this.ramSize,
+        pages: this.ramPages
+      },
+      swap: {
+        used: this.swapPages.filter(p => p !== null).length * this.pageSize,
+        total: this.swapSize,
+        pages: this.swapPages
+      },
+      pageFaults: this.pageFaults,
+      fragmentation: this.getFragmentation()
+    };
+  }
+}
+
+// ---------- ProcessManager ----------
+class ProcessManager {
+  constructor() { 
+    this.processes = []; 
+    this.nextPid = 1;
+    this.lastTickTime = Date.now();
+  }
+  spawn(name, memoryMB, critical = false) {
+    const proc = {
+      pid: this.nextPid++, name, memory: memoryMB,
+      state: 'running', cpuTime: 0,
+      priority: Math.floor(Math.random() * 5) + 1,
+      critical,
+      cpuPercent: 20,
+      history: new Array(60).fill('idle')
+    };
+    this.processes.push(proc);
+    return proc;
+  }
+  killLast() {
+    for (let i = this.processes.length - 1; i >= 0; i--) {
+      if (this.processes[i].state !== 'dead' && this.processes[i].name !== 'kernel') {
+        this.processes[i].state = 'dead';
+        return this.processes[i];
+      }
+    }
+    return null;
+  }
+  killByName(name) {
+    const proc = this.processes.find(p => p.name === name && p.state !== 'dead');
+    if (proc) { proc.state = 'dead'; return proc; }
+    return null;
+  }
+  tick() {
+    this.processes.forEach(p => {
+      if (p.state === 'dead') {
+        p.history.push('dead');
+        if (p.history.length > 60) p.history.shift();
+        return;
+      }
+      if (Math.random() < 0.1) {
+        p.state = p.state === 'running' ? 'blocked' : 'running';
+      }
+      if (p.state === 'running') {
+        p.cpuTime++;
+        p.cpuPercent = Math.min(100, p.cpuPercent + Math.floor(Math.random() * 10));
+      } else {
+        p.cpuPercent = Math.max(0, p.cpuPercent - 5);
+      }
+      p.history.push(p.state === 'running' ? 'running' : p.state === 'blocked' ? 'blocked' : 'dead');
+      if (p.history.length > 60) p.history.shift();
+    });
+    this.processes = this.processes.filter(p => p.state !== 'dead' || p.cpuTime < 200);
+  }
+  getAll() { return this.processes; }
+  getByName(name) { return this.processes.find(p => p.name === name); }
+}
+
+// ---------- Loader ----------
+class Loader {
+  constructor(memory) { this.memory = memory; }
+  load(type, sizeMB) {
+    const id = `${type}-${Date.now() % 10000}`;
+    const result = this.memory.allocate(id, sizeMB, type);
+    if (!result.ok) return { ok: false };
+    return { ok: true, swapped: result.swapped };
+  }
+}
+
+// ---------- Visualizer ----------
+class Visualizer {
+  renderMemory(memory) {
+    const { ram, swap } = memory.getUsage();
+    this._renderBlocks('ram-blocks', ram.pages, 'ram');
+    this._renderBlocks('swap-blocks', swap.pages, 'swap');
+  }
+  _renderBlocks(containerId, pages, memoryType) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = pages.map((page, idx) => {
+      if (!page) return `<div class="block free"></div>`;
+      const cls = page.state === 'swapped' ? 'swapped' : 'used';
+      const label = (page.type || '?').slice(0, 3).toUpperCase();
+      return `<div class="block ${cls}" data-mem="${memoryType}" data-idx="${idx}" 
+              title="${page.id} (${page.type})">${label}</div>`;
+    }).join('');
+
+    // Обработчики клика
+    container.querySelectorAll('.block:not(.free)').forEach(el => {
+      el.addEventListener('click', () => {
+        const mem = el.dataset.mem;
+        const idx = parseInt(el.dataset.idx);
+        const page = mem === 'ram' ? memory.ramPages[idx] : memory.swapPages[idx];
+        if (page) window._app.showPageInfo(page, mem, idx);
+      });
+    });
+  }
+  renderProcesses(processes) {
+    const container = document.getElementById('process-list');
+    if (!container) return;
+    if (processes.length === 0) {
+      container.innerHTML = '<div style="color:#8b949e;font-size:11px">Нет процессов</div>';
+      return;
+    }
+    container.innerHTML = processes.map(p => `
+      <div class="process ${p.state} ${p.critical ? 'critical' : ''}">
+        <b>PID ${p.pid}</b> — ${p.name}<br>
+        <small>${p.memory} MB · ${p.state} · CPU: ${p.cpuTime}</small>
+        <div class="cpu-bar"><div style="width: ${p.cpuPercent}%"></div></div>
+      </div>
+    `).join('');
+  }
+  renderStats(memory, currentFps, freezeTime) {
+    const { ram, swap, pageFaults } = memory.getUsage();
+    document.getElementById('ram-usage').textContent = `${ram.used}/${ram.total} MB`;
+    document.getElementById('swap-usage').textContent = `${swap.used}/${swap.total} MB`;
+    document.getElementById('page-faults').textContent = pageFaults;
+    const fpsEl = document.getElementById('fps');
+    fpsEl.textContent = currentFps;
+    fpsEl.style.color = currentFps < 30 ? '#f85149' : currentFps < 50 ? '#d29922' : '#2ea043';
+    document.getElementById('algo-display').textContent = memory.algorithm;
+    document.getElementById('freeze-time').textContent = freezeTime.toFixed(1) + ' с';
+  }
+  log(message, level = 'info') {
+    const logEl = document.getElementById('log');
+    if (!logEl) return;
+    const time = new Date().toLocaleTimeString('ru-RU');
+    const line = document.createElement('div');
+    line.className = `log-${level}`;
+    line.textContent = `[${time}] ${message}`;
+    logEl.prepend(line);
+    while (logEl.children.length > 80) logEl.lastChild.remove();
+    // Сохраняем в историю для экспорта
+    if (window._app) window._app.logHistory.push({ time, message, level });
+  }
+  clearLog() {
+    const logEl = document.getElementById('log');
+    if (logEl) logEl.innerHTML = '';
+  }
+}
+
+// ---------- FPS Chart ----------
+class FpsChart {
+  constructor(canvasId) {
+    this.canvas = document.getElementById(canvasId);
+    this.ctx = this.canvas.getContext('2d');
+    this.history = [];
+    this.maxPoints = 60;
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+  }
+  resize() {
+    if (!this.canvas) return;
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width === 0) return;
+    this.canvas.width = rect.width * window.devicePixelRatio;
+    this.canvas.height = rect.height * window.devicePixelRatio;
+    this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    this.width = rect.width;
+    this.height = rect.height;
+    this.draw();
+  }
+  push(fps) {
+    this.history.push(fps);
+    if (this.history.length > this.maxPoints) this.history.shift();
+    this.draw();
+  }
+  draw() {
+    const ctx = this.ctx, w = this.width, h = this.height;
+    if (!w || !h) return;
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = '#21262d';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 4; i++) {
+      const y = (h / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px monospace';
+    ctx.fillText('60', 4, 12);
+    ctx.fillText('30', 4, h / 2 + 4);
+    ctx.fillText('0', 4, h - 4);
+    ctx.strokeStyle = '#d29922';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, h / 2);
+    ctx.lineTo(w, h / 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    if (this.history.length < 2) return;
+    const step = w / (this.maxPoints - 1);
+    const gradient = ctx.createLinearGradient(0, 0, 0, h);
+    gradient.addColorStop(0, 'rgba(88,166,255,0.4)');
+    gradient.addColorStop(1, 'rgba(88,166,255,0)');
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    this.history.forEach((fps, i) => {
+      const x = i * step;
+      const y = h - (fps / 60) * h;
+      ctx.lineTo(x, y);
+    });
+    ctx.lineTo((this.history.length - 1) * step, h);
+    ctx.closePath();
+    ctx.fillStyle = gradient;
+    ctx.fill();
+    ctx.beginPath();
+    this.history.forEach((fps, i) => {
+      const x = i * step;
+      const y = h - (fps / 60) * h;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    });
+    ctx.strokeStyle = '#58a6ff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+}
+
+// ---------- Gantt Chart ----------
+class GanttChart {
+  constructor(canvasId) {
+    this.canvas = document.getElementById(canvasId);
+    this.ctx = this.canvas.getContext('2d');
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+  }
+  resize() {
+    if (!this.canvas) return;
+    const rect = this.canvas.getBoundingClientRect();
+    if (rect.width === 0) return;
+    this.canvas.width = rect.width * window.devicePixelRatio;
+    this.canvas.height = rect.height * window.devicePixelRatio;
+    this.ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    this.width = rect.width;
+    this.height = rect.height;
+  }
+  draw(processes) {
+    const ctx = this.ctx, w = this.width, h = this.height;
+    if (!w || !h) return;
+    ctx.clearRect(0, 0, w, h);
+    if (!processes || processes.length === 0) {
+      ctx.fillStyle = '#8b949e';
+      ctx.font = '12px sans-serif';
+      ctx.fillText('Нет процессов', 20, h / 2);
+      return;
+    }
+    const rowHeight = Math.min(20, h / Math.max(processes.length, 4));
+    const labelWidth = 70;
+    const timeWidth = (w - labelWidth - 10) / 60;
+    processes.slice(0, 6).forEach((p, idx) => {
+      const y = idx * rowHeight + 5;
+      // Метка процесса
+      ctx.fillStyle = '#8b949e';
+      ctx.font = '11px monospace';
+      ctx.fillText(p.name.slice(0, 10), 5, y + rowHeight * 0.7);
+      // Полоса
+      p.history.slice(-60).forEach((state, i) => {
+        const x = labelWidth + i * timeWidth;
+        let color;
+        switch (state) {
+          case 'running': color = '#2ea043'; break;
+          case 'blocked': color = '#d29922'; break;
+          case 'dead': color = '#f85149'; break;
+          default: color = '#21262d';
+        }
+        ctx.fillStyle = color;
+        ctx.fillRect(x, y, timeWidth - 1, rowHeight - 2);
+      });
+    });
+  }
+}
+
+// ---------- Achievements ----------
+const Achievements = {
+  first_op: { icon: '🎯', title: 'Первый опыт', desc: 'Пройдите первый опыт' },
+  algorithm_master: { icon: '🔀', title: 'Мастер алгоритмов', desc: 'Попробуйте все 3 алгоритма' },
+  optimizer: { icon: '🥇', title: 'Optimizer', desc: 'Удержали FPS > 55 весь опыт' },
+  memory_master: { icon: '🧠', title: 'Memory Master', desc: 'Опыт без page faults' },
+  crash_tester: { icon: '💀', title: 'Crash Tester', desc: 'Довели систему до OOM' },
+  race_finder: { icon: '🏁', title: 'Race Finder', desc: 'Нашли race condition' },
+  deadlock_breaker: { icon: '🔓', title: 'Deadlock Breaker', desc: 'Разблокировали deadlock' },
+  examiner: { icon: '✅', title: 'Отличник', desc: '5 правильных ответов подряд' },
+  experimenter: { icon: '🔬', title: 'Экспериментатор', desc: 'Изменили все 3 слайдера' },
+  all_scenarios: { icon: '🏆', title: 'Всё пройдено', desc: 'Все 13 опытов' },
+  game_winner: { icon: '🎮', title: 'Игрок', desc: 'Прошли мини-игру' },
+};
+
+// ---------- Quiz ----------
+const QuizBank = {
+  1: { question: 'Когда RAM заполнена, куда ОС вытесняет редко используемые страницы?',
+       options: ['В CPU-кэш', 'В swap-файл', 'В видеопамять', 'Никуда'],
+       correct: 1, explanation: 'Swap — область на диске для вытеснения страниц. В ~1000 раз медленнее RAM.' },
+  2: { question: 'Почему при thrashing резко падает FPS?',
+       options: ['Процессор перегревается', 'Видеокарта не успевает',
+                 'ОС тратит время на перекачку страниц', 'Интернет тормозит'],
+       correct: 2, explanation: 'Thrashing — ОС тратит время на page faults вместо полезной работы.' },
+  3: { question: 'Что произойдёт, если процесс renderer умрёт?',
+       options: ['Ничего', 'Игра продолжит работать без графики',
+                 'Игра упадёт или перестанет обновлять кадры', 'FPS вырастет'],
+       correct: 2, explanation: 'Renderer — критический процесс. Без него некому рисовать.' },
+  4: { question: 'Как Garbage Collector помогает при утечках?',
+       options: ['Увеличивает RAM', 'Освобождает память без ссылок',
+                 'Ускоряет CPU', 'Переносит в swap'],
+       correct: 1, explanation: 'GC находит объекты без ссылок и освобождает их.' },
+  5: { question: 'Что такое фрагментация памяти?',
+       options: ['Память заполнена', 'Свободная память раздроблена',
+                 'Процессор перегружен', 'Диск медленный'],
+       correct: 1, explanation: 'Свободные блоки раздроблены — новый объект не влезает целиком.' },
+  6: { question: 'Какой алгоритм вытеснения обычно даёт меньше page faults?',
+       options: ['FIFO', 'LRU', 'Random', 'Все одинаково'],
+       correct: 1, explanation: 'LRU учитывает реальное использование страниц.' },
+  7: { question: 'Как размер страницы влияет на производительность?',
+       options: ['Никак', 'Большие страницы — меньше page faults',
+                 'Маленькие всегда лучше', 'Все одинаково'],
+       correct: 1, explanation: 'Большие страницы уменьшают page faults, но растёт внутренняя фрагментация.' },
+  8: { question: 'Что такое стриминг ресурсов?',
+       options: ['Онлайн-трансляция', 'Подгрузка ресурсов на лету',
+                 'Сжатие текстур', 'Кэширование CPU'],
+       correct: 1, explanation: 'Игра подгружает ресурсы по мере необходимости, а не всё сразу.' },
+  9: { question: 'Что такое race condition?',
+       options: ['Гонка процессов за CPU', 'Одновременное изменение данных',
+                 'Ускорение памяти', 'Приоритет процесса'],
+       correct: 1, explanation: 'Два процесса меняют одни данные — результат непредсказуем.' },
+  10: { question: 'Что такое deadlock?',
+        options: ['Смерть процесса', 'Взаимная блокировка',
+                  'Быстрая остановка', 'Ошибка памяти'],
+        correct: 1, explanation: 'Два процесса держат ресурсы друг друга и ждут.' },
+  11: { question: 'Зачем нужен Producer-Consumer с буфером?',
+        options: ['Для красоты', 'Чтобы согласовать скорости производителя и потребителя',
+                  'Для экономии памяти', 'Для кэша'],
+        correct: 1, explanation: 'Буфер сглаживает разницу скоростей процессов.' },
+  12: { question: 'Зачем использовать Object Pool?',
+        options: ['Для красоты', 'Чтобы избежать аллокаций в рантайме',
+                  'Для сетевой игры', 'Для сжатия'],
+        correct: 1, explanation: 'Пул объектов переиспользует память — нет фрагментации и фризов.' },
+  13: { question: 'Что делает OOM-killer?',
+        options: ['Ускоряет систему', 'Убивает процессы при исчерпании памяти',
+                  'Освобождает swap', 'Перезапускает ОС'],
+        correct: 1, explanation: 'OOM-killer жертвует процессом, чтобы спасти систему.' },
+};
+
+// ---------- State ----------
+let memory, processes, loader, visualizer, fpsChart, ganttChart;
+let scenarioRunning = false;
+let currentFps = 60;
+let scenarioResults = [];
+let logHistory = [];
+let freezeTime = 0;
+let unlockedAchievements = new Set();
+let consecutiveCorrect = 0;
+let usedAlgorithms = new Set(['FIFO']);
+let slidersTouched = new Set();
+let miniGameState = null;
+let studentInfo = {
+  name: '', group: '', teacher: '',
+  date: new Date().toISOString().slice(0, 10)
+};
+
+// ---------- Init ----------
+function initSimulation() {
+  const ramSize = parseInt(document.getElementById('ram-slider').value);
+  const pageSize = parseInt(document.getElementById('page-slider').value);
+  memory = new MemoryManager(ramSize, 1024, pageSize);
+  processes = new ProcessManager();
+  visualizer = new Visualizer();
+  loader = new Loader(memory);
+  processes.spawn('kernel', 32, true);
+  processes.spawn('renderer', 64, true);
+  processes.spawn('physics', 48);
+  processes.spawn('audio', 16);
+  visualizer.clearLog();
+  visualizer.log(`Система инициализирована. RAM: ${ramSize} MB, страница: ${pageSize} MB`, 'ok');
+  updateUI();
+}
+
+function updateUI() {
+  visualizer.renderMemory(memory);
+  visualizer.renderProcesses(processes.getAll());
+  visualizer.renderStats(memory, currentFps, freezeTime);
+  if (ganttChart) ganttChart.draw(processes.getAll());
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function stripEmoji(str) {
+  return str.replace(/[\u{1F300}-\u{1F9FF}]/gu, '').replace(/^[^\wа-яА-Я]+/, '').trim();
+}
+function escapeHTML(str) {
+  if (str === undefined || str === null) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ============================================================
+// ДОСТИЖЕНИЯ
+// ============================================================
+function unlockAchievement(key) {
+  if (unlockedAchievements.has(key)) return;
+  unlockedAchievements.add(key);
+  const ach = Achievements[key];
+  if (!ach) return;
+
+  // Уведомление
+  const notif = document.createElement('div');
+  notif.className = 'notification';
+  notif.innerHTML = `
+    <div class="ach-icon">${ach.icon}</div>
+    <div class="ach-title">Достижение: ${ach.title}</div>
+    <div class="ach-desc">${ach.desc}</div>
+  `;
+  document.body.appendChild(notif);
+  setTimeout(() => notif.classList.add('show'), 50);
+  setTimeout(() => {
+    notif.classList.remove('show');
+    setTimeout(() => notif.remove(), 400);
+  }, 4000);
+
+  visualizer.log(`🏆 Достижение разблокировано: ${ach.title}`, 'ok');
+  renderAchievements();
+  updateLevel();
+}
+
+function renderAchievements() {
+  const panel = document.getElementById('achievements-panel');
+  const fullPanel = document.getElementById('achievements-full');
+  if (!panel) return;
+
+  panel.innerHTML = Object.entries(Achievements).map(([key, a]) =>
+    `<div class="achievement ${unlockedAchievements.has(key) ? 'unlocked' : ''}"
+          title="${a.title}: ${a.desc}">${a.icon}</div>`
+  ).join('');
+
+  if (fullPanel) {
+    fullPanel.innerHTML = Object.entries(Achievements).map(([key, a]) => `
+      <div style="background: #21262d; padding: 15px; border-radius: 8px; 
+                  border-left: 4px solid ${unlockedAchievements.has(key) ? '#d29922' : '#30363d'};
+                  ${unlockedAchievements.has(key) ? '' : 'opacity: 0.5;'}">
+        <div style="font-size: 32px; margin-bottom: 8px;">${a.icon}</div>
+        <div style="color: ${unlockedAchievements.has(key) ? '#d29922' : '#8b949e'}; 
+                    font-weight: bold; margin-bottom: 5px;">${a.title}</div>
+        <div style="font-size: 13px; color: #8b949e;">${a.desc}</div>
+        ${unlockedAchievements.has(key) ? '<div style="margin-top: 8px; color: #2ea043; font-size: 12px;">✅ Получено</div>' : ''}
+      </div>
+    `).join('');
+  }
+}
+
+const Levels = [
+  { name: 'Junior Developer', min: 0 },
+  { name: 'Middle Gameplay Programmer', min: 3 },
+  { name: 'Senior Engine Developer', min: 6 },
+  { name: 'Graphics Programmer', min: 9 },
+  { name: 'OS Architect', min: 12 },
+];
+
+function updateLevel() {
+  const count = unlockedAchievements.size;
+  let level = Levels[0];
+  for (const l of Levels) if (count >= l.min) level = l;
+  document.getElementById('level-title').textContent = level.name;
+  const idx = Levels.indexOf(level);
+  const next = Levels[idx + 1];
+  const progress = next ? ((count - level.min) / (next.min - level.min)) * 100 : 100;
+  document.getElementById('level-bar-fill').style.width = progress + '%';
+}
+
+// ============================================================
+// ВКЛАДКИ
+// ============================================================
+document.querySelectorAll('.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab === 'sim') {
+      setTimeout(() => { fpsChart.resize(); ganttChart.resize(); }, 50);
+    }
+  });
+});
+
+// ============================================================
+// ДАННЫЕ СТУДЕНТА
+// ============================================================
+function updateStudentPanel() {
+  document.getElementById('si-name').textContent = studentInfo.name || 'не указан';
+  document.getElementById('si-group').textContent = studentInfo.group || 'не указана';
+  document.getElementById('si-teacher').textContent = studentInfo.teacher || 'не указан';
+  const d = new Date(studentInfo.date);
+  document.getElementById('si-date').textContent = d.toLocaleDateString('ru-RU', {
+    day: 'numeric', month: 'long', year: 'numeric'
+  });
+}
+
+document.querySelector('button[data-action="edit-student"]').addEventListener('click', () => {
+  document.getElementById('input-name').value = studentInfo.name;
+  document.getElementById('input-group').value = studentInfo.group;
+  document.getElementById('input-teacher').value = studentInfo.teacher;
+  document.getElementById('input-date').value = studentInfo.date;
+  document.getElementById('student-modal').classList.add('active');
+});
+
+document.getElementById('student-save').onclick = () => {
+  studentInfo.name = document.getElementById('input-name').value.trim();
+  studentInfo.group = document.getElementById('input-group').value.trim();
+  studentInfo.teacher = document.getElementById('input-teacher').value.trim();
+  studentInfo.date = document.getElementById('input-date').value || new Date().toISOString().slice(0, 10);
+  updateStudentPanel();
+  document.getElementById('student-modal').classList.remove('active');
+  saveProgress();
+  visualizer.log('Данные студента сохранены', 'ok');
+};
+document.getElementById('student-cancel').onclick = () => {
+  document.getElementById('student-modal').classList.remove('active');
+};
+
+// ============================================================
+// АЛГОРИТМ
+// ============================================================
+document.querySelectorAll('button[data-algo]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (scenarioRunning) return;
+    document.querySelectorAll('button[data-algo]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    memory.setAlgorithm(btn.dataset.algo);
+    usedAlgorithms.add(btn.dataset.algo);
+    if (usedAlgorithms.size === 3) unlockAchievement('algorithm_master');
+    visualizer.log(`Алгоритм изменён на ${btn.dataset.algo}`, 'info');
+    updateUI();
+  });
+});
+
+// ============================================================
+// СЛАЙДЕРЫ
+// ============================================================
+document.getElementById('ram-slider').addEventListener('input', (e) => {
+  document.getElementById('ram-slider-val').textContent = e.target.value;
+  document.getElementById('ram-size-label').textContent = e.target.value;
+  slidersTouched.add('ram');
+  checkSliders();
+});
+document.getElementById('ram-slider').addEventListener('change', (e) => {
+  if (scenarioRunning) return;
+  memory.ramSize = parseInt(e.target.value);
+  memory.ramPages = new Array(Math.floor(memory.ramSize / memory.pageSize)).fill(null);
+  visualizer.log(`RAM изменён на ${memory.ramSize} MB`, 'warn');
+  updateUI();
+});
+document.getElementById('page-slider').addEventListener('input', (e) => {
+  document.getElementById('page-slider-val').textContent = e.target.value;
+  document.getElementById('page-size-label').textContent = e.target.value;
+  slidersTouched.add('page');
+  checkSliders();
+});
+document.getElementById('page-slider').addEventListener('change', (e) => {
+  if (scenarioRunning) return;
+  memory.setPageSize(parseInt(e.target.value));
+  visualizer.log(`Размер страницы изменён на ${memory.pageSize} MB`, 'warn');
+  updateUI();
+});
+document.getElementById('disk-slider').addEventListener('input', (e) => {
+  document.getElementById('disk-slider-val').textContent = (parseInt(e.target.value) / 10).toFixed(1);
+  slidersTouched.add('disk');
+  checkSliders();
+});
+
+function checkSliders() {
+  if (slidersTouched.size === 3) unlockAchievement('experimenter');
+}
+
+// ============================================================
+// ДЕЙСТВИЯ
+// ============================================================
+document.querySelectorAll('button[data-action]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const action = btn.dataset.action;
+    if (scenarioRunning && !['show-results', 'export-pdf', 'export-log', 'mini-game'].includes(action)) {
+      visualizer.log('Дождитесь завершения опыта', 'warn');
+      return;
+    }
+    switch (action) {
+      case 'load-texture': {
+        const r = loader.load('texture', 64);
+        if (r.ok) visualizer.log(`Текстура (64 MB)${r.swapped ? ' → часть в SWAP' : ''}`, r.swapped ? 'warn' : 'ok');
+        else visualizer.log('ОШИБКА: недостаточно памяти', 'error');
+        break;
+      }
+      case 'load-model': {
+        const r = loader.load('model', 128);
+        if (r.ok) visualizer.log(`Модель (128 MB)${r.swapped ? ' → часть в SWAP' : ''}`, r.swapped ? 'warn' : 'ok');
+        else visualizer.log('ОШИБКА: недостаточно памяти', 'error');
+        break;
+      }
+      case 'load-audio': {
+        const r = loader.load('audio', 32);
+        if (r.ok) visualizer.log(`Звук (32 MB)${r.swapped ? ' → часть в SWAP' : ''}`, r.swapped ? 'warn' : 'ok');
+        else visualizer.log('ОШИБКА: недостаточно памяти', 'error');
+        break;
+      }
+      case 'spawn-process': {
+        const p = processes.spawn(`worker-${Date.now() % 1000}`, 32);
+        visualizer.log(`Запущен процесс ${p.name} (PID ${p.pid})`, 'info');
+        break;
+      }
+      case 'kill-process': {
+        const killed = processes.killLast();
+        if (killed) visualizer.log(`Процесс ${killed.name} завершён`, 'warn');
+        else visualizer.log('Нет процессов', 'warn');
+        break;
+      }
+      case 'gc': {
+        const freed = memory.garbageCollect();
+        visualizer.log(`GC освободил ${freed} страниц`, 'ok');
+        break;
+      }
+      case 'interrupt': {
+        visualizer.log('⚡ Прерывание! Переключение контекста...', 'warn');
+        const running = processes.getAll().filter(p => p.state === 'running');
+        if (running.length > 0) {
+          const p = running[Math.floor(Math.random() * running.length)];
+          p.state = 'blocked';
+          visualizer.log(`Процесс ${p.name} прерван планировщиком`, 'warn');
+        }
+        break;
+      }
+      case 'sync-frame': {
+        visualizer.log('🎬 Синхронизация кадра: все процессы ждут...', 'sync');
+        const all = processes.getAll().filter(p => p.state !== 'dead');
+        setTimeout(() => {
+          all.forEach(p => { if (p.state === 'blocked' && Math.random() < 0.7) p.state = 'running'; });
+          visualizer.log('✅ Кадр синхронизирован', 'ok');
+          updateUI();
+        }, 500);
+        break;
+      }
+      case 'stress-io': {
+        visualizer.log('🌊 Нагрузка на I/O: дисковые операции замедлены', 'warn');
+        setTimeout(() => visualizer.log('✅ I/O нагрузка снята', 'ok'), 3000);
+        break;
+      }
+      case 'reset': {
+        initSimulation();
+        visualizer.log('Симуляция сброшена', 'info');
+        break;
+      }
+      case 'show-results': showResultsModal(); break;
+      case 'export-pdf': exportPDF(); break;
+      case 'export-log': exportLog(); break;
+      case 'clear-results': {
+        scenarioResults = [];
+        visualizer.log('Результаты очищены', 'warn');
+        break;
+      }
+      case 'mini-game': startMiniGame(); break;
+    }
+    updateUI();
+  });
+});
+
+// ============================================================
+// ОПЫТЫ
+// ============================================================
+const ScenarioTasks = {
+  1: { title: '📘 Опыт 1: Переполнение RAM',
+       description: `<p><b>Цель:</b> увидеть, что происходит при заполнении RAM.</p>
+       <p>Загрузим 10 текстур по 64 MB. Наблюдайте за блоками Swap и счётчиком Page Faults.</p>` },
+  2: { title: '📗 Опыт 2: Page Thrashing',
+       description: `<p><b>Цель:</b> увидеть эффект пробуксовки.</p>
+       <p>Заполним память и запустим поток обращений. Смотрите на FPS и Page Faults.</p>` },
+  3: { title: '📙 Опыт 3: Смерть рендера',
+       description: `<p><b>Цель:</b> понять роль критических процессов.</p>
+       <p>Убьём процесс renderer и посмотрим, что будет.</p>` },
+  4: { title: '📕 Опыт 4: Утечка памяти',
+       description: `<p><b>Цель:</b> увидеть деградацию от утечек.</p>
+       <p>Процесс будет выделять +16 MB каждые 350 мс.</p>` },
+  5: { title: '📘 Опыт 5: Фрагментация памяти',
+       description: `<p><b>Цель:</b> увидеть, как раздробленность памяти мешает новым аллокациям.</p>
+       <p>Загрузим и выгрузим объекты разного размера. Смотрим на fragmentation %.</p>` },
+  6: { title: '📗 Опыт 6: A/B сравнение алгоритмов',
+       description: `<p><b>Цель:</b> сравнить FIFO, LRU и Clock на одном сценарии.</p>
+       <p>Автоматически прогоним один опыт 3 раза с разными алгоритмами.</p>` },
+  7: { title: '📙 Опыт 7: Размер страницы',
+       description: `<p><b>Цель:</b> увидеть компромисс между размером страницы и page faults.</p>
+       <p>Прогоним сценарий с 4, 16 и 64 MB.</p>` },
+  8: { title: '📕 Опыт 8: Стриминг локации',
+       description: `<p><b>Цель:</b> понять, как стриминг ресурсов спасает от фризов.</p>
+       <p>Игрок идёт по карте, чанки подгружаются на лету.</p>` },
+  9: { title: '📘 Опыт 9: Race Condition',
+       description: `<p><b>Цель:</b> увидеть гонку данных и эффект мьютекса.</p>
+       <p>Два процесса инкрементируют счётчик 200 раз. Сравним результат.</p>` },
+  10: { title: '📗 Опыт 10: Deadlock',
+        description: `<p><b>Цель:</b> увидеть взаимную блокировку.</p>
+        <p>renderer и audio держат ресурсы друг друга и ждут.</p>` },
+  11: { title: '📙 Опыт 11: Producer-Consumer',
+        description: `<p><b>Цель:</b> понять, как буфер сглаживает скорости.</p>
+        <p>Производитель делает кадры, потребитель рендерит. Буфер = 5 слотов.</p>` },
+  12: { title: '📕 Опыт 12: Object Pool',
+        description: `<p><b>Цель:</b> увидеть разницу между new/delete и пулом.</p>
+        <p>Сначала 100 аллокаций без пула, затем с пулом.</p>` },
+  13: { title: '📘 Опыт 13: OOM-killer',
+        description: `<p><b>Цель:</b> увидеть Out-Of-Memory и реакцию ОС.</p>
+        <p>Заполним всю RAM и Swap — активируется OOM-killer.</p>` },
+};
+
+document.querySelectorAll('button[data-scenario]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (scenarioRunning) return;
+    showTaskModal(parseInt(btn.dataset.scenario));
+  });
+});
+
+function showTaskModal(num) {
+  const task = ScenarioTasks[num];
+  document.getElementById('task-title').textContent = task.title;
+  document.getElementById('task-body').innerHTML = task.description;
+  document.getElementById('task-modal').classList.add('active');
+  document.getElementById('task-start').onclick = () => {
+    document.getElementById('task-modal').classList.remove('active');
+    runScenario(num);
+  };
+  document.getElementById('task-cancel').onclick = () => {
+    document.getElementById('task-modal').classList.remove('active');
+  };
+}
+
+async function runScenario(num) {
+  scenarioRunning = true;
+  setButtonsDisabled(true);
+  const startState = {
+    algorithm: memory.algorithm,
+    pageFaultsAtStart: memory.pageFaults,
+    fpsSamples: [],
+    freezeAtStart: freezeTime
+  };
+
+  try {
+    switch (num) {
+      case 1: await scenarioOverflow(startState); break;
+      case 2: await scenarioThrashing(startState); break;
+      case 3: await scenarioKillRenderer(startState); break;
+      case 4: await scenarioMemoryLeak(startState); break;
+      case 5: await scenarioFragmentation(startState); break;
+      case 6: await scenarioABTest(startState); break;
+      case 7: await scenarioPageSize(startState); break;
+      case 8: await scenarioStreaming(startState); break;
+      case 9: await scenarioRaceCondition(startState); break;
+      case 10: await scenarioDeadlock(startState); break;
+      case 11: await scenarioProducerConsumer(startState); break;
+      case 12: await scenarioObjectPool(startState); break;
+      case 13: await scenarioOOM(startState); break;
+    }
+
+    const usage = memory.getUsage();
+    scenarioResults.push({
+      scenario: num,
+      scenarioName: ScenarioTasks[num].title,
+      algorithm: memory.algorithm,
+      pageFaultsDelta: memory.pageFaults - startState.pageFaultsAtStart,
+      pageFaultsTotal: memory.pageFaults,
+      finalFps: currentFps,
+      minFps: Math.min(...startState.fpsSamples, currentFps, 60),
+      swapUsed: usage.swap.used,
+      ramUsed: usage.ram.used,
+      fragmentation: usage.fragmentation,
+      freezeDelta: freezeTime - startState.freezeAtStart,
+      chartSnapshot: fpsChart.history.slice(-40),
+      timestamp: new Date()
+    });
+
+    unlockAchievement('first_op');
+    if (scenarioResults.length === 13) unlockAchievement('all_scenarios');
+    saveProgress();
+
+    await sleep(400);
+    showQuizModal(num);
+  } finally {
+    scenarioRunning = false;
+    setButtonsDisabled(false);
+  }
+}
+
+function setButtonsDisabled(disabled) {
+  document.querySelectorAll('button').forEach(b => {
+    if (b.closest('.modal') || b.closest('.mini-game')) return;
+    b.disabled = disabled;
+  });
+}
+
+// ---------- Реализация опытов ----------
+async function scenarioOverflow(state) {
+  visualizer.log('▶️ ОПЫТ 1: Переполнение RAM', 'info');
+  await sleep(500);
+  for (let i = 0; i < 10; i++) {
+    const r = loader.load('texture', 64);
+    if (r.ok) visualizer.log(`Текстура #${i+1}${r.swapped ? ' → часть в SWAP' : ''}`, r.swapped ? 'warn' : 'ok');
+    else { visualizer.log(`Текстура #${i+1}: НЕТ ПАМЯТИ`, 'error'); break; }
+    updateUI();
+    state.fpsSamples.push(currentFps);
+    await sleep(400);
+  }
+  visualizer.log('📊 Опыт завершён', 'log-quiz');
+}
+
+async function scenarioThrashing(state) {
+  visualizer.log('▶️ ОПЫТ 2: Page Thrashing', 'info');
+  for (let i = 0; i < 12; i++) {
+    loader.load('model', 128);
+    updateUI();
+    state.fpsSamples.push(currentFps);
+    await sleep(150);
+  }
+  visualizer.log('Поток обращений к памяти...', 'warn');
+  for (let i = 0; i < 25; i++) {
+    memory.simulateAccess(); memory.simulateAccess(); memory.simulateAccess();
+    updateUI();
+    state.fpsSamples.push(currentFps);
+    await sleep(180);
+  }
+  visualizer.log(`📊 Page faults: ${memory.pageFaults}`, 'log-quiz');
+}
+
+async function scenarioKillRenderer(state) {
+  visualizer.log('▶️ ОПЫТ 3: Смерть рендера', 'info');
+  await sleep(600);
+  const r = processes.getByName('renderer');
+  if (r) {
+    visualizer.log(`Убиваем renderer (PID ${r.pid})...`, 'warn');
+    await sleep(800);
+    processes.killByName('renderer');
+    visualizer.log('💀 Renderer убит!', 'error');
+  }
+  for (let i = 0; i < 8; i++) {
+    state.fpsSamples.push(currentFps); updateUI(); await sleep(400);
+  }
+  visualizer.log('📊 Опыт завершён', 'log-quiz');
+}
+
+async function scenarioMemoryLeak(state) {
+  visualizer.log('▶️ ОПЫТ 4: Утечка памяти', 'info');
+  await sleep(400);
+  for (let i = 0; i < 20; i++) {
+    const r = memory.allocate(`leak-${i}`, 16, 'leak');
+    if (r.ok) visualizer.log(`Утечка #${i+1}: +16 MB`, 'warn');
+    else { visualizer.log(`Утечка #${i+1}: память кончилась!`, 'error'); break; }
+    updateUI();
+    state.fpsSamples.push(currentFps);
+    await sleep(300);
+  }
+  await sleep(500);
+  visualizer.log('GC...', 'info');
+  await sleep(500);
+  const freed = memory.garbageCollect();
+  visualizer.log(`GC освободил ${freed} страниц`, 'ok');
+  updateUI();
+  visualizer.log('📊 Опыт завершён', 'log-quiz');
+}
+
+async function scenarioFragmentation(state) {
+  visualizer.log('▶️ ОПЫТ 5: Фрагментация памяти', 'info');
+  // Загружаем блоки разного размера
+  for (let i = 0; i < 6; i++) {
+    loader.load(i % 2 === 0 ? 'texture' : 'audio', i % 2 === 0 ? 64 : 32);
+    updateUI();
+    await sleep(300);
+  }
+  visualizer.log('Выгружаем каждый второй блок...', 'warn');
+  // Удаляем случайные страницы (создаём "дырки")
+  for (let i = 0; i < memory.ramPages.length; i++) {
+    if (memory.ramPages[i] && i % 3 === 0 && memory.ramPages[i].type !== 'kernel') {
+      memory.ramPages[i] = null;
+    }
+  }
+  updateUI();
+  await sleep(500);
+  const frag = memory.getFragmentation();
+  visualizer.log(`🧩 Фрагментация: ${frag}%`, 'warn');
+  visualizer.log('Пробуем загрузить модель 128 MB...', 'info');
+  await sleep(500);
+  const r = loader.load('model', 128);
+  if (r.ok) visualizer.log(`Модель загружена${r.swapped ? ' (часть в SWAP)' : ''}`, 'warn');
+  else visualizer.log('Несмотря на свободное место — не влезло!', 'error');
+  updateUI();
+  visualizer.log('📊 Опыт завершён', 'log-quiz');
+}
+
+async function scenarioABTest(state) {
+  visualizer.log('▶️ ОПЫТ 6: Сравнение алгоритмов', 'info');
+  const algorithms = ['FIFO', 'LRU', 'Clock'];
+  const results = [];
+  for (const algo of algorithms) {
+    visualizer.log(`--- Прогон с ${algo} ---`, 'info');
+    memory.setAlgorithm(algo);
+    const pfBefore = memory.pageFaults;
+    for (let i = 0; i < 8; i++) {
+      loader.load('texture', 64);
+      updateUI();
+      await sleep(120);
+    }
+    for (let i = 0; i < 10; i++) {
+      memory.simulateAccess(); memory.simulateAccess();
+      updateUI();
+      await sleep(100);
+    }
+    results.push({ algo, pf: memory.pageFaults - pfBefore });
+    state.fpsSamples.push(currentFps);
+    await sleep(400);
+  }
+  visualizer.log('═══════════════════════════', 'info');
+  results.forEach(r => visualizer.log(`${r.algo}: ${r.pf} page faults`, 'warn'));
+  const best = results.reduce((b, r) => r.pf < b.pf ? r : b);
+  visualizer.log(`🏆 Лучший: ${best.algo}`, 'ok');
+  visualizer.log('📊 Опыт завершён', 'log-quiz');
+}
+
+async function scenarioPageSize(state) {
+  visualizer.log('▶️ ОПЫТ 7: Размер страницы', 'info');
+  const sizes = [4, 16, 64];
+  const results = [];
+  for (const size of sizes) {
+    visualizer.log(`--- Страница ${size} MB ---`, 'info');
+    memory.setPageSize(size);
+    document.getElementById('page-slider-val').textContent = size;
+    document.getElementById('page-size-label').textContent = size;
+    const pfBefore = memory.pageFaults;
+    for (let i = 0; i < 6; i++) {
+      loader.load('texture', 64);
+      updateUI();
+      await sleep(150);
+    }
+    results.push({ size, pf: memory.pageFaults - pfBefore });
+    await sleep(300);
+  }
+  visualizer.log('═══════════════════════════', 'info');
+  results.forEach(r => visualizer.log(`Страница ${r.size} MB: ${r.pf} page faults`, 'warn'));
+  visualizer.log('📊 Меньше страница — больше page faults, но меньше потерь', 'info');
+  visualizer.log('📊 Опыт завершён', 'log-quiz');
+}
+
+async function scenarioStreaming(state) {
+  visualizer.log('▶️ ОПЫТ 8: Стриминг локации', 'info');
+  visualizer.log('Игрок движется по карте...', 'info');
+  const chunks = ['forest', 'village', 'mountain', 'cave', 'lake'];
+  for (let i = 0; i < chunks.length; i++) {
+    visualizer.log(`📍 Локация: ${chunks[i]}`, 'info');
+    // Подгружаем чанк
+    const r = loader.load('chunk', 96);
+    if (r.ok) {
+      visualizer.log(`  → загружен чанк ${chunks[i]}${r.swapped ? ' (в SWAP)' : ''}`, r.swapped ? 'warn' : 'ok');
+    } else {
+      visualizer.log(`  → НЕ ХВАТИЛО памяти для ${chunks[i]}!`, 'error');
+    }
+    // Выгружаем старый чанк (если есть)
+    if (i >= 2) {
+      visualizer.log(`  → выгружаем чанк ${chunks[i-2]}`, 'info');
+      memory.garbageCollect();
+    }
+    updateUI();
+    state.fpsSamples.push(currentFps);
+    await sleep(700);
+  }
+  visualizer.log('📊 Опыт завершён', 'log-quiz');
+}
+
+async function scenarioRaceCondition(state) {
+  visualizer.log('▶️ ОПЫТ 9: Race Condition', 'info');
+  await sleep(400);
+  const target = 200;
+
+  // Без мьютекса
+  visualizer.log('Без мьютекса:', 'warn');
+  let counter = 0;
+  for (let i = 0; i < 100; i++) {
+    // Два процесса одновременно
+    const a = counter;
+    const b = counter;
+    await sleep(5);
+    counter = Math.max(a, b) + 1 + (Math.random() < 0.3 ? 0 : 1); // иногда теряем
+    if (i % 20 === 0) {
+      visualizer.log(`  Прогресс: ${i}/100 (counter = ${counter})`, 'info');
+      updateUI();
+    }
+  }
+  const noMutexResult = counter;
+  visualizer.log(`  Результат: counter = ${noMutexResult} (ожидалось ${target})`, 'error');
+  visualizer.log(`  Потеряно операций: ${target - noMutexResult}`, 'error');
+  unlockAchievement('race_finder');
+  await sleep(800);
+
+  // С мьютексом
+  visualizer.log('С мьютексом 🔒:', 'ok');
+  counter = 0;
+  for (let i = 0; i < 100; i++) {
+    counter += 2; // мьютекс гарантирует корректность
+    await sleep(5);
+    if (i % 20 === 0) {
+      visualizer.log(`  Прогресс: ${i}/100 (counter = ${counter})`, 'info');
+      updateUI();
+    }
+  }
+  visualizer.log(`  Результат: counter = ${counter} ✅`, 'ok');
+  visualizer.log('📊 Опыт завершён', 'log-quiz');
+}
+
+async function scenarioDeadlock(state) {
+  visualizer.log('▶️ ОПЫТ 10: Deadlock', 'info');
+  await sleep(500);
+  visualizer.log('renderer: держит [RAM-A], ждёт [GPU-queue]', 'warn');
+  await sleep(400);
+  visualizer.log('audio:    держит [GPU-queue], ждёт [RAM-A]', 'warn');
+  await sleep(600);
+  visualizer.log('🔒 DEADLOCK! Оба процесса заблокированы навсегда.', 'error');
+  const renderer = processes.getByName('renderer');
+  const audio = processes.getByName('audio');
+  if (renderer) renderer.state = 'blocked';
+  if (audio) audio.state = 'blocked';
+  updateUI();
+  await sleep(1000);
+  visualizer.log('Пытаемся разрешить через откат (rollback)...', 'info');
+  await sleep(800);
+  if (renderer) renderer.state = 'running';
+  if (audio) audio.state = 'running';
+  visualizer.log('✅ Deadlock разрешён принудительно', 'ok');
+  unlockAchievement('deadlock_breaker');
+  updateUI();
+  visualizer.log('📊 Опыт завершён', 'log-quiz');
+}
+
+async function scenarioProducerConsumer(state) {
+  visualizer.log('▶️ ОПЫТ 11: Producer-Consumer', 'info');
+  const bufferSize = 5;
+  let buffer = 0;
+  let produced = 0, consumed = 0;
+
+  for (let tick = 0; tick < 20; tick++) {
+    // Producer
+    if (buffer < bufferSize) {
+      buffer++;
+      produced++;
+      visualizer.log(`[Producer] +1 кадр (буфер: ${buffer}/${bufferSize})`, 'info');
+    } else {
+      visualizer.log(`[Producer] буфер полон, ждём...`, 'warn');
+    }
+
+    await sleep(200);
+
+    // Consumer
+    if (buffer > 0) {
+      buffer--;
+      consumed++;
+      visualizer.log(`[Consumer] рендер кадра (буфер: ${buffer}/${bufferSize})`, 'ok');
+    } else {
+      visualizer.log(`[Consumer] буфер пуст, ждём...`, 'warn');
+    }
+
+    state.fpsSamples.push(currentFps);
+    updateUI();
+    await sleep(200);
+  }
+  visualizer.log(`📊 Произведено: ${produced}, потреблено: ${consumed}`, 'info');
+  visualizer.log('📊 Опыт завершён', 'log-quiz');
+}
+
+async function scenarioObjectPool(state) {
+  visualizer.log('▶️ ОПЫТ 12: Object Pool', 'info');
+  await sleep(400);
+  const pfStart = memory.pageFaults;
+  visualizer.log('Без пула: 100 аллокаций через new/delete...', 'warn');
+
+  for (let i = 0; i < 100; i++) {
+    memory.allocate(`bullet-${i}`, 8, 'bullet');
+    if (i % 20 === 0) {
+      // Выгружаем часть — симуляция delete
+      for (let j = 0; j < memory.ramPages.length; j++) {
+        if (memory.ramPages[j] && memory.ramPages[j].id?.startsWith('bullet-') && Math.random() < 0.3) {
+          memory.ramPages[j] = null;
+        }
+      }
+      updateUI();
+      await sleep(100);
+    }
+  }
+  const pfNoPool = memory.pageFaults - pfStart;
+  visualizer.log(`  Page faults без пула: ${pfNoPool}`, 'error');
+  await sleep(600);
+
+  visualizer.log('С пулом: 100 выстрелов из пула (без аллокаций)', 'ok');
+  const pfStart2 = memory.pageFaults;
+  for (let i = 0; i < 100; i++) {
+    // Из пула — просто используем готовые
+    await sleep(20);
+  }
+  const pfPool = memory.pageFaults - pfStart2;
+  visualizer.log(`  Page faults с пулом: ${pfPool}`, 'ok');
+  visualizer.log(`📊 Экономия: ${pfNoPool - pfPool} page faults`, 'info');
+  visualizer.log('📊 Опыт завершён', 'log-quiz');
+}
+
+async function scenarioOOM(state) {
+  visualizer.log('▶️ ОПЫТ 13: OOM-killer', 'info');
+  visualizer.log('Забиваем RAM и Swap...', 'warn');
+  for (let i = 0; i < 30; i++) {
+    const r = memory.allocate(`big-${i}`, 64, 'bigdata');
+    if (!r.ok) {
+      visualizer.log('💀 OOM! Память закончилась!', 'error');
+      unlockAchievement('crash_tester');
+      await sleep(500);
+      // OOM-killer убивает жирный процесс
+      const fat = processes.getAll()
+        .filter(p => p.state !== 'dead' && p.name !== 'kernel')
+        .sort((a, b) => b.memory - a.memory)[0];
+      if (fat) {
+        visualizer.log(`OOM-killer убивает процесс ${fat.name} (${fat.memory} MB)`, 'error');
+        fat.state = 'dead';
+        // Освобождаем его страницы
+        for (let j = 0; j < memory.ramPages.length; j++) {
+          if (memory.ramPages[j] && Math.random() < 0.5) memory.ramPages[j] = null;
+        }
+      }
+      break;
+    }
+    updateUI();
+    state.fpsSamples.push(currentFps);
+    await sleep(200);
+  }
+  updateUI();
+  visualizer.log('📊 Опыт завершён', 'log-quiz');
+}
+
+// ============================================================
+// QUIZ
+// ============================================================
+function showQuizModal(num) {
+  const q = QuizBank[num];
+  if (!q) return;
+  const body = document.getElementById('quiz-body');
+  body.innerHTML = `
+    <div class="question"><h4>Вопрос:</h4><p>${q.question}</p></div>
+    <div>${q.options.map((opt, i) =>
+      `<label><input type="radio" name="quiz-answer" value="${i}"> ${opt}</label>`
+    ).join('')}</div>
+    <div class="feedback" id="quiz-feedback"></div>
+  `;
+  document.getElementById('quiz-modal').classList.add('active');
+  const submitBtn = document.getElementById('quiz-submit');
+  const skipBtn = document.getElementById('quiz-skip');
+  const feedback = document.getElementById('quiz-feedback');
+  submitBtn.disabled = false;
+
+  submitBtn.onclick = () => {
+    const selected = document.querySelector('input[name="quiz-answer"]:checked');
+    if (!selected) {
+      feedback.textContent = '⚠️ Выберите вариант';
+      feedback.className = 'feedback wrong';
+      return;
+    }
+    const chosen = parseInt(selected.value);
+    const isCorrect = chosen === q.correct;
+    if (scenarioResults.length > 0) {
+      scenarioResults[scenarioResults.length - 1].quizAnswer = {
+        chosen, correct: isCorrect,
+        question: q.question,
+        chosenAnswer: q.options[chosen],
+        correctAnswer: q.options[q.correct],
+        explanation: q.explanation
+      };
+    }
+    if (isCorrect) {
+      consecutiveCorrect++;
+      if (consecutiveCorrect >= 5) unlockAchievement('examiner');
+    } else {
+      consecutiveCorrect = 0;
+    }
+    feedback.innerHTML = `
+      <b>${isCorrect ? '✅ Верно!' : '❌ Неверно.'}</b><br>
+      ${isCorrect ? '' : `Правильный ответ: <b>${q.options[q.correct]}</b><br><br>`}
+      <b>Пояснение:</b> ${q.explanation}
+    `;
+    feedback.className = `feedback ${isCorrect ? 'correct' : 'wrong'}`;
+    submitBtn.disabled = true;
+    setTimeout(() => document.getElementById('quiz-modal').classList.remove('active'), 3500);
+  };
+  skipBtn.onclick = () => {
+    if (scenarioResults.length > 0) scenarioResults[scenarioResults.length - 1].quizAnswer = null;
+    document.getElementById('quiz-modal').classList.remove('active');
+  };
+}
+
+// ============================================================
+// ИНФОРМАЦИЯ О СТРАНИЦЕ
+// ============================================================
+function showPageInfo(page, memType, idx) {
+  const body = document.getElementById('page-info-body');
+  body.innerHTML = `
+    <table class="results-table">
+      <tr><td><b>ID</b></td><td>${escapeHTML(page.id)}</td></tr>
+      <tr><td><b>Тип</b></td><td>${escapeHTML(page.type)}</td></tr>
+      <tr><td><b>Расположение</b></td><td>${memType === 'ram' ? '🟢 RAM' : '🟧 Swap'}</td></tr>
+      <tr><td><b>Индекс</b></td><td>${idx}</td></tr>
+      <tr><td><b>Состояние</b></td><td>${escapeHTML(page.state)}</td></tr>
+      ${page.lastAccess !== undefined ? `<tr><td><b>Последнее обращение</b></td><td>тик #${page.lastAccess}</td></tr>` : ''}
+      ${page.insertOrder !== undefined ? `<tr><td><b>Загружено</b></td><td>тик #${page.insertOrder}</td></tr>` : ''}
+      ${page.refBit !== undefined ? `<tr><td><b>Ref bit</b></td><td>${page.refBit}</td></tr>` : ''}
+    </table>
+  `;
+  document.getElementById('page-info-modal').classList.add('active');
+}
+document.getElementById('page-info-close').onclick = () => {
+  document.getElementById('page-info-modal').classList.remove('active');
+};
+
+// ============================================================
+// РЕЗУЛЬТАТЫ
+// ============================================================
+function showResultsModal() {
+  const body = document.getElementById('results-body');
+  if (scenarioResults.length === 0) {
+    body.innerHTML = '<p style="text-align:center;color:#8b949e">Пока нет опытов.</p>';
+  } else {
+    const rows = scenarioResults.map((r, i) => {
+      const quizBadge = r.quizAnswer
+        ? (r.quizAnswer.correct ? '✅' : '❌')
+        : '—';
+      return `<tr>
+        <td>${i+1}</td><td>${stripEmoji(r.scenarioName)}</td>
+        <td><span class="badge ${r.algorithm}">${r.algorithm}</span></td>
+        <td>${r.pageFaultsDelta}</td><td>${r.finalFps}</td>
+        <td>${r.swapUsed} MB</td><td>${quizBadge}</td>
+      </tr>`;
+    }).join('');
+    const correct = scenarioResults.filter(r => r.quizAnswer?.correct).length;
+    const answered = scenarioResults.filter(r => r.quizAnswer).length;
+    body.innerHTML = `
+      <p>Опытов: <b>${scenarioResults.length}</b></p>
+      <p>Правильных: <b>${correct} из ${answered}</b></p>
+      <table class="results-table">
+        <thead><tr><th>#</th><th>Опыт</th><th>Алгоритм</th>
+        <th>PF</th><th>FPS</th><th>Swap</th><th>✓</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+  document.getElementById('results-modal').classList.add('active');
+}
+document.getElementById('results-close').onclick = () => {
+  document.getElementById('results-modal').classList.remove('active');
+};
+
+// ============================================================
+// ЭКСПОРТ ЖУРНАЛА
+// ============================================================
+function exportLog() {
+  const lines = logHistory.map(l => `[${l.time}] [${l.level.toUpperCase()}] ${l.message}`);
+  const content = `# Журнал ОС — Game Engine Simulator v5.0
+Дата: ${new Date().toLocaleString('ru-RU')}
+Студент: ${studentInfo.name || 'не указан'}
+Группа: ${studentInfo.group || 'не указана'}
+
+Всего записей: ${logHistory.length}
+
+${lines.join('\n')}
+`;
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  downloadBlob(blob, `OS_Lab_Log_${new Date().toISOString().slice(0,10)}.txt`);
+  visualizer.log('📄 Журнал экспортирован', 'ok');
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ============================================================
+// СОХРАНЕНИЕ ПРОГРЕССА
+// ============================================================
+function saveProgress() {
+  try {
+    const data = {
+      studentInfo,
+      scenarioResults: scenarioResults.map(r => ({ ...r, chartSnapshot: [] })),
+      unlockedAchievements: Array.from(unlockedAchievements),
+      timestamp: Date.now()
+    };
+    localStorage.setItem('osLabProgress', JSON.stringify(data));
+  } catch (e) {
+    console.warn('Не удалось сохранить прогресс', e);
+  }
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem('osLabProgress');
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.studentInfo) studentInfo = { ...studentInfo, ...data.studentInfo };
+    if (data.scenarioResults) scenarioResults = data.scenarioResults.map(r => ({ ...r, chartSnapshot: [] }));
+    if (data.unlockedAchievements) unlockedAchievements = new Set(data.unlockedAchievements);
+  } catch (e) {
+    console.warn('Не удалось загрузить прогресс', e);
+  }
+}
+
+// ============================================================
+// МИНИ-ИГРА
+// ============================================================
+const miniGameEvents = [
+  { title: '🎬 Катсцена!', desc: 'Нужно выгрузить игровые текстуры, загрузить видео',
+    correct: 'unload', wrong: ['gc', 'priority', 'lru'] },
+  { title: '⚔️ Битва с боссом!', desc: 'Рендеру нужен максимальный приоритет',
+    correct: 'priority', wrong: ['gc', 'unload', 'lru'] },
+  { title: '💤 Игрок AFK', desc: 'Можно освободить ресурсы',
+    correct: 'gc', wrong: ['priority', 'unload', 'lru'] },
+  { title: '🗺️ Смена локации', desc: 'Много page faults — смените алгоритм',
+    correct: 'lru', wrong: ['gc', 'unload', 'priority'] },
+];
+
+function startMiniGame() {
+  document.getElementById('mini-game-overlay').classList.add('active');
+  miniGameState = { score: 0, eventIdx: 0, timer: null, eventTimer: null };
+
+  document.getElementById('mg-score').textContent = '0 с';
+  document.getElementById('mg-event').innerHTML = `
+    <div class="event-title">Приготовься...</div>
+    <div>Игра начнётся через 3 секунды</div>
+  `;
+  document.getElementById('mg-controls').style.display = 'none';
+
+  setTimeout(() => {
+    document.getElementById('mg-controls').style.display = 'grid';
+    nextMiniGameEvent();
+    // Тикаем счёт
+    miniGameState.timer = setInterval(() => {
+      miniGameState.score++;
+      document.getElementById('mg-score').textContent = miniGameState.score + ' с';
+    }, 1000);
+  }, 3000);
+}
+
+function nextMiniGameEvent() {
+  if (!miniGameState) return;
+  if (miniGameState.eventIdx >= miniGameEvents.length) {
+    endMiniGame(true);
+    return;
+  }
+  const ev = miniGameEvents[miniGameState.eventIdx];
+  document.getElementById('mg-event').innerHTML = `
+    <div class="event-title">${ev.title}</div>
+    <div>${ev.desc}</div>
+  `;
+
+  // Автоматический провал через 4 секунды
+  clearTimeout(miniGameState.eventTimer);
+  miniGameState.eventTimer = setTimeout(() => {
+    visualizer.log(`❌ Провал события: ${ev.title}`, 'error');
+    miniGameState.eventIdx++;
+    nextMiniGameEvent();
+  }, 4000);
+}
+
+document.querySelectorAll('button[data-mg]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (!miniGameState) return;
+    const action = btn.dataset.mg;
+    const ev = miniGameEvents[miniGameState.eventIdx];
+    if (!ev) return;
+
+    clearTimeout(miniGameState.eventTimer);
+
+    if (action === ev.correct) {
+      miniGameState.score += 2;
+      document.getElementById('mg-score').textContent = miniGameState.score + ' с';
+      visualizer.log(`✅ Правильно: ${ev.title}`, 'ok');
+    } else {
+      miniGameState.score = Math.max(0, miniGameState.score - 1);
+      visualizer.log(`❌ Ошибка: ${ev.title}`, 'error');
+    }
+    miniGameState.eventIdx++;
+    setTimeout(nextMiniGameEvent, 500);
+  });
+});
+
+function endMiniGame(success) {
+  clearInterval(miniGameState.timer);
+  clearTimeout(miniGameState.eventTimer);
+  document.getElementById('mg-controls').style.display = 'none';
+  document.getElementById('mg-event').innerHTML = `
+    <div class="event-title">${success ? '🏆 Игра пройдена!' : '💀 Игра провалена'}</div>
+    <div>Ваш счёт: <b>${miniGameState.score} секунд</b></div>
+  `;
+  if (success && miniGameState.score > 0) {
+    unlockAchievement('game_winner');
+  }
+  miniGameState = null;
+}
+
+document.getElementById('mg-close').onclick = () => {
+  if (miniGameState) {
+    clearInterval(miniGameState.timer);
+    clearTimeout(miniGameState.eventTimer);
+    miniGameState = null;
+  }
+  document.getElementById('mini-game-overlay').classList.remove('active');
+};
+
+// ============================================================
+// ЭКСПОРТ PDF (упрощённый — без графиков для экономии места)
+// ============================================================
+function exportPDF() {
+  if (scenarioResults.length === 0) {
+    alert('Сначала выполните хотя бы один опыт.');
+    return;
+  }
+
+  const d = new Date(studentInfo.date);
+  const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+  const correctCount = scenarioResults.filter(r => r.quizAnswer?.correct).length;
+  const answeredCount = scenarioResults.filter(r => r.quizAnswer).length;
+  const score = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+
+  let reportHTML = `
+    <div class="title-page">
+      <div class="title-header">
+        <p>МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ РФ</p>
+        <p style="margin-top: 20px;">_________________________________________</p>
+      </div>
+      <div class="title-spacer"></div>
+      <div class="title-main">
+        <h1>ОТЧЁТ</h1>
+        <h2>по практической работе</h2>
+        <p class="title-subject">по дисциплине «Операционные системы и среды<br>для разработчиков компьютерных игр»</p>
+        <p class="title-topic">Тема: «Виртуальная память, подкачка<br>и взаимодействие процессов»</p>
+      </div>
+      <div class="title-spacer"></div>
+      <div class="title-info">
+        <p><b>Выполнил(а):</b></p>
+        <p>студент(ка) группы <b>${escapeHTML(studentInfo.group || '—')}</b></p>
+        <p><b>${escapeHTML(studentInfo.name || '—')}</b></p>
+        <p style="margin-top: 25px;"><b>Проверил(а):</b></p>
+        <p><b>${escapeHTML(studentInfo.teacher || '—')}</b></p>
+      </div>
+      <div class="title-spacer"></div>
+      <div class="title-footer"><p>${dateStr}</p></div>
+    </div>
+    <div class="page-break"></div>
+
+    <h1 class="section-title">1. Цель работы</h1>
+    <p>Изучить на практике механизмы виртуальной памяти, подкачки (swap), 
+    page faults и взаимодействия процессов на примере симуляции игрового движка.</p>
+
+    <h1 class="section-title">2. Условия эксперимента</h1>
+    <ul>
+      <li>Объём RAM: <b>${memory.ramSize} MB</b></li>
+      <li>Объём Swap: <b>${memory.swapSize} MB</b></li>
+      <li>Размер страницы: <b>${memory.pageSize} MB</b></li>
+      <li>Инструмент: <b>Game Engine OS Simulator v5.0</b></li>
+      <li>Дата: <b>${dateStr}</b></li>
+      <li>Всего опытов: <b>${scenarioResults.length}</b></li>
+    </ul>
+
+    <h1 class="section-title">3. Выполненные опыты</h1>
+  `;
+
+  scenarioResults.forEach((r, i) => {
+    const chartDataURL = renderChartSnapshot(r.chartSnapshot || [], `FPS — Опыт ${i + 1}`);
+    reportHTML += `
+      <h2 class="subsection">Опыт ${i + 1}. ${stripEmoji(r.scenarioName)}</h2>
+      <table class="report-table">
+        <tr><td class="key">Алгоритм</td><td>${r.algorithm}</td></tr>
+        <tr><td class="key">Page faults</td><td>${r.pageFaultsDelta}</td></tr>
+        <tr><td class="key">Финальный FPS</td><td>${r.finalFps}</td></tr>
+        <tr><td class="key">Мин. FPS</td><td>${r.minFps}</td></tr>
+        <tr><td class="key">RAM / Swap</td><td>${r.ramUsed} / ${r.swapUsed} MB</td></tr>
+        <tr><td class="key">Фрагментация</td><td>${r.fragmentation}%</td></tr>
+        <tr><td class="key">Время фризов</td><td>${r.freezeDelta.toFixed(1)} с</td></tr>
+      </table>
+      <div class="chart-block">
+        <img src="${chartDataURL}" alt="FPS chart" class="chart-img">
+        <p class="chart-caption">Рисунок ${i + 1}. Динамика FPS во время опыта</p>
+      </div>
+    `;
+    if (r.quizAnswer) {
+      reportHTML += `
+        <div class="quiz-block">
+          <p><b>Вопрос:</b> ${escapeHTML(r.quizAnswer.question)}</p>
+          <p><b>Ответ:</b> ${escapeHTML(r.quizAnswer.chosenAnswer)}
+            ${r.quizAnswer.correct ? '<span class="result-correct">✓ Правильно</span>' : '<span class="result-wrong">✗ Неправильно</span>'}
+          </p>
+          <p><b>Пояснение:</b> ${escapeHTML(r.quizAnswer.explanation)}</p>
+        </div>
+      `;
+    }
+  });
+
+  reportHTML += `
+    <h1 class="section-title">4. Итоги</h1>
+    <ul>
+      <li>Всего опытов: <b>${scenarioResults.length}</b></li>
+      <li>Правильных ответов: <b>${correctCount} из ${answeredCount}</b></li>
+      <li>Итоговая оценка: <b>${score}%</b></li>
+      <li>Разблокировано достижений: <b>${unlockedAchievements.size} из ${Object.keys(Achievements).length}</b></li>
+      <li>Текущий уровень: <b>${document.getElementById('level-title').textContent}</b></li>
+    </ul>
+
+    <h1 class="section-title">5. Выводы</h1>
+    <ol>
+      <li><b>Виртуальная память и подкачка.</b> При заполнении RAM ОС вытесняет страницы в swap.</li>
+      <li><b>Page faults.</b> Обращение к странице в swap требует чтения с диска — это медленно.</li>
+      <li><b>Thrashing.</b> ОС тратит больше времени на подкачку, чем на полезную работу.</li>
+      <li><b>Фрагментация.</b> Раздробленная память мешает новым аллокациям.</li>
+      <li><b>Race Condition.</b> Без мьютекса два процесса портят общие данные.</li>
+      <li><b>Deadlock.</b> Взаимная блокировка полностью останавливает систему.</li>
+      <li><b>Object Pool.</b> Переиспользование памяти экономит page faults.</li>
+    </ol>
+    <p class="conclusion"><b>Практическая значимость для геймдева:</b> понимание 
+    этих механизмов позволяет проектировать системы стриминга ресурсов, 
+    оптимизировать использование памяти и избегать фризов в играх.</p>
+
+    <h1 class="section-title">6. Источники</h1>
+    <ol>
+      <li>Arpaci-Dusseau R., Arpaci-Dusseau A. «Operating Systems: Three Easy Pieces».</li>
+      <li>Bryant R., O'Hallaron D. «Computer Systems: A Programmer's Perspective».</li>
+      <li>Gregory J. «Game Engine Architecture».</li>
+      <li>Tanenbaum A. «Modern Operating Systems».</li>
+    </ol>
+  `;
+
+  const printStyles = `
+    @page { size: A4; margin: 2cm 1.5cm; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Times New Roman', serif;
+      font-size: 12pt;
+      line-height: 1.5;
+      color: #000;
+      background: #fff;
+      max-width: 21cm;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .title-page {
+      text-align: center;
+      page-break-after: always;
+      min-height: 24cm;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .title-header p { margin: 3px 0; font-size: 12pt; }
+    .title-spacer { height: 35px; }
+    .title-main h1 { font-size: 24pt; margin: 25px 0 10px; letter-spacing: 3px; }
+    .title-main h2 { font-size: 16pt; font-weight: normal; margin-bottom: 25px; }
+    .title-subject { font-size: 13pt; margin: 20px 0; line-height: 1.6; }
+    .title-topic { font-size: 13pt; font-style: italic; }
+    .title-info { text-align: right; padding-right: 30px; line-height: 1.8; }
+    .page-break { page-break-after: always; height: 0; }
+    h1.section-title {
+      font-size: 15pt; color: #1F4E79; margin-top: 22pt;
+      margin-bottom: 10pt; padding-bottom: 4pt;
+      border-bottom: 1.5px solid #1F4E79;
+      page-break-after: avoid;
+    }
+    h2.subsection {
+      font-size: 13pt; color: #2E74B5;
+      margin-top: 16pt; margin-bottom: 8pt;
+    }
+    p { margin: 8pt 0; text-align: justify; }
+    ul, ol { margin: 8pt 0 8pt 24pt; }
+    li { margin-bottom: 5pt; }
+    table.report-table {
+      width: 100%; border-collapse: collapse;
+      margin: 10pt 0; font-size: 11pt;
+    }
+    table.report-table td {
+      border: 1px solid #999; padding: 6pt 10pt;
+    }
+    table.report-table .key {
+      background: #DEEAF6; font-weight: bold; width: 45%;
+    }
+    .quiz-block {
+      background: #F4F8FC; border-left: 3px solid #2E74B5;
+      padding: 10pt 14pt; margin: 10pt 0;
+    }
+    .result-correct { color: #2ea043; font-weight: bold; }
+    .result-wrong { color: #d1242f; font-weight: bold; }
+    .conclusion {
+      background: #F0F7F0; padding: 12pt 16pt;
+      border-left: 4px solid #2ea043; margin-top: 15pt;
+    }
+    .chart-block { margin: 12pt 0; text-align: center; }
+    .chart-img { width: 100%; max-width: 16cm; }
+    .chart-caption { font-size: 10pt; color: #555; font-style: italic; }
+    .print-toolbar {
+      position: fixed; top: 20px; right: 20px;
+      background: #1F4E79; color: #fff;
+      padding: 15px 20px; border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      z-index: 100; text-align: right; max-width: 300px;
+    }
+    .print-toolbar button {
+      background: #fff; color: #1F4E79; border: none;
+      padding: 10px 20px; border-radius: 6px;
+      font-size: 14px; font-weight: bold; cursor: pointer;
+    }
+    .print-toolbar .toolbar-hint {
+      display: block; margin-top: 8px; opacity: 0.9; font-size: 11px;
+    }
+    @media print {
+      .print-toolbar { display: none !important; }
+      body { padding: 0; }
+    }
+  `;
+
+  const printHTML = `
+    <!DOCTYPE html><html lang="ru"><head><meta charset="utf-8">
+    <title>Отчёт по практической работе</title>
+    <style>${printStyles}</style></head>
+    <body>
+      <div class="print-toolbar">
+        <div style="font-weight:bold;margin-bottom:10px">📕 Отчёт готов</div>
+        <button onclick="window.print()">🖨️ Сохранить как PDF</button>
+        <span class="toolbar-hint">Выберите «Сохранить как PDF»</span>
+      </div>
+      ${reportHTML}
+      <script>setTimeout(() => window.print(), 900);<\/script>
+    </body></html>
+  `;
+
+  const w = window.open('', '_blank');
+  if (!w) { alert('Разрешите всплывающие окна'); return; }
+  w.document.open();
+  w.document.write(printHTML);
+  w.document.close();
+  visualizer.log('📕 Отчёт открыт в новом окне', 'ok');
+}
+
+function renderChartSnapshot(history, title = 'FPS') {
+  const width = 700, height = 180, topMargin = 30;
+  const c = document.createElement('canvas');
+  c.width = width; c.height = height + topMargin + 20;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, width, height + topMargin + 20);
+  ctx.fillStyle = '#1F4E79';
+  ctx.font = 'bold 14px Arial';
+  ctx.fillText(title, 10, 20);
+
+  const plotX = 45, plotY = topMargin, plotW = width - plotX - 20, plotH = height;
+  ctx.strokeStyle = '#ddd';
+  for (let i = 0; i <= 4; i++) {
+    const y = plotY + (plotH / 4) * i;
+    ctx.beginPath(); ctx.moveTo(plotX, y); ctx.lineTo(plotX + plotW, y); ctx.stroke();
+  }
+  ctx.fillStyle = '#666';
+  ctx.font = '11px Arial';
+  ctx.fillText('60', 18, plotY + 12);
+  ctx.fillText('30', 18, plotY + plotH * 0.5 + 4);
+  ctx.fillText('0', 25, plotY + plotH - 2);
+
+  ctx.strokeStyle = '#d29922';
+  ctx.setLineDash([5, 5]);
+  ctx.beginPath();
+  ctx.moveTo(plotX, plotY + plotH * 0.5);
+  ctx.lineTo(plotX + plotW, plotY + plotH * 0.5);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  if (!history || history.length < 2) {
+    ctx.fillStyle = '#999';
+    ctx.font = '13px Arial';
+    ctx.fillText('Недостаточно данных', plotX + 50, plotY + plotH / 2);
+    return c.toDataURL('image/png');
+  }
+
+  const maxPoints = 40;
+  const normalized = [];
+  const step = history.length / maxPoints;
+  for (let i = 0; i < maxPoints; i++) {
+    normalized.push(history[Math.min(Math.floor(i * step), history.length - 1)]);
+  }
+  const stepX = plotW / (maxPoints - 1);
+
+  ctx.beginPath();
+  ctx.moveTo(plotX, plotY + plotH);
+  normalized.forEach((fps, i) => {
+    const x = plotX + i * stepX;
+    const y = plotY + plotH - (fps / 60) * plotH;
+    ctx.lineTo(x, y);
+  });
+  ctx.lineTo(plotX + plotW, plotY + plotH);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, plotY, 0, plotY + plotH);
+  grad.addColorStop(0, 'rgba(31,78,121,0.25)');
+  grad.addColorStop(1, 'rgba(31,78,121,0.02)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  ctx.beginPath();
+  normalized.forEach((fps, i) => {
+    const x = plotX + i * stepX;
+    const y = plotY + plotH - (fps / 60) * plotH;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = '#1F4E79';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  const lastFps = normalized[normalized.length - 1];
+  const lastY = plotY + plotH - (lastFps / 60) * plotH;
+  ctx.fillStyle = lastFps < 30 ? '#d1242f' : lastFps < 50 ? '#d29922' : '#2ea043';
+  ctx.beginPath();
+  ctx.arc(plotX + plotW, lastY, 4, 0, Math.PI * 2);
+  ctx.fill();
+
+  return c.toDataURL('image/png');
+}
+
+// ============================================================
+// Игровой цикл
+// ============================================================
+fpsChart = new FpsChart('fps-chart');
+ganttChart = new GanttChart('gantt-chart');
+
+setInterval(() => {
+  memory.simulateAccess();
+  processes.tick();
+  const baseFps = 60 - Math.floor(memory.pageFaults / 2);
+  const noise = Math.floor(Math.random() * 6) - 3;
+  currentFps = Math.max(5, Math.min(60, baseFps + noise));
+  if (currentFps < 30) freezeTime += 1;
+  fpsChart.push(currentFps);
+  updateUI();
+}, 1000);
+
+// Init
+loadProgress();
+updateStudentPanel();
+renderAchievements();
+updateLevel();
+initSimulation();
+</script>
+</body>
+</html>
